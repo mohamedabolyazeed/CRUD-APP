@@ -1,0 +1,38 @@
+{
+  "name": "crud-app",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "homepage": "https://github.com/mohamedabolyazeed22/Learn-Nodejs#readme",
+  "bugs": {
+    "url": "https://github.com/mohamedabolyazeed22/Learn-Nodejs/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohamedabolyazeed22/Learn-Nodejs.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "app.js",
+  "scripts": {
+    "comment": "npm run watch => Run the project with nodemon for automatic",
+    "start": "node ./bin/www",
+    "watch": "nodemon --ext js,ejs --ignore public/"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "bootstrap": "^5.3.3",
+    "connect-livereload": "^0.6.1",
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^16.4.7",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "livereload": "^0.9.3",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  }
+}
