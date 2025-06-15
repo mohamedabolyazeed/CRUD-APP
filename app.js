@@ -5,14 +5,21 @@ const mongoose = require("mongoose");
 const { connectDB } = require("./DB/connection");
 const { Mydata } = require("./DB/user.schema");
 const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // View Engine Setup
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-// Static Files Middleware
+// Middleware
+app.use(logger("dev"));
+app.use(express.json());
+app.use(express.urlencoded({ extended: false }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
 
 // LiveReload (Development Only - remove or comment out for production)
@@ -38,10 +45,6 @@ if (process.env.NODE_ENV !== "production") {
     );
   }
 }
-
-// Body Parsing Middleware
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 // Database Connection
 connectDB();
@@ -307,6 +310,17 @@ app.delete("/api/users/:id", async (req, res) => {
   }
 });
 
+// catch 404 and forward to error handler
+app.use(function (req, res, next) {
+  next(createError(404));
+});
+
+// error handler
+app.use(function (err, req, res, next) {
+  res.status(err.status || 500);
+  res.json({ error: err.message });
+});
+
 // Handle 404 errors
 app.use((req, res) => {
   res.status(404).send("Page not found");
@@ -330,3 +344,5 @@ app.listen(port, () => {
     "Check terminal logs for messages starting with 'GET /edit/...' or 'POST /delete...' when you click the buttons."
   );
 });
+
+module.exports = app;
