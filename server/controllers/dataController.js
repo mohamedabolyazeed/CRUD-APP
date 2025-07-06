@@ -1,66 +1,22 @@
-// app.js
-
-const express = require("express");
+const Data = require("../models/Data");
 const mongoose = require("mongoose");
-const { connectDB } = require("./DB/connection");
-const { Mydata } = require("./DB/user.schema");
-const path = require("path");
-const cookieParser = require("cookie-parser");
-const logger = require("morgan");
 
-const app = express();
-const port = process.env.PORT || 3001;
-
-// View Engine Setup
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-// Middleware
-app.use(logger("dev"));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "public")));
-
-// LiveReload (Development Only - remove or comment out for production)
-if (process.env.NODE_ENV !== "production") {
+// GET: Display home page with user's data only (protected by auth)
+const getHomePage = async (req, res) => {
+  console.log("GET / - Request received for user:", req.session.user._id);
   try {
-    const livereload = require("livereload");
-    const connectLivereload = require("connect-livereload");
-
-    const liveReloadServer = livereload.createServer();
-    liveReloadServer.watch(path.join(__dirname, "views"));
-    liveReloadServer.watch(path.join(__dirname, "public"));
-    app.use(connectLivereload());
-
-    liveReloadServer.server.once("connection", () => {
-      setTimeout(() => {
-        liveReloadServer.refresh("/");
-      }, 100);
+    // Get only the current user's data entries
+    const userData = await Data.find({ user: req.session.user._id }).sort({
+      createdAt: -1,
     });
-  } catch (e) {
-    console.warn(
-      "Livereload setup failed. Ensure livereload and connect-livereload are installed if in development.",
-      e.message
-    );
-  }
-}
-
-// Database Connection
-connectDB();
-
-// --- ROUTES ---
-
-// GET: Display home page with all users and the form to add new user
-app.get("/", async (req, res) => {
-  console.log("GET / - Request received");
-  try {
-    const allUsers = await Mydata.find().sort({ createdAt: -1 });
     res.render("home", {
       my_title: "Home Page",
-      arr: allUsers,
+      arr: userData,
       error: null,
       formData: {},
+      success_msg: req.flash("success_msg"),
+      error_msg: req.flash("error_msg"),
+      req: req,
     });
   } catch (err) {
     console.error("Error fetching data for home page:", err);
@@ -69,12 +25,15 @@ app.get("/", async (req, res) => {
       arr: [],
       error: "Error retrieving data from database",
       formData: {},
+      success_msg: req.flash("success_msg"),
+      error_msg: req.flash("error_msg"),
+      req: req,
     });
   }
-});
+};
 
 // POST: Create a new user
-app.post("/", async (req, res) => {
+const createData = async (req, res) => {
   console.log("POST / - Request body:", req.body);
   try {
     const { username, age, specialization, address } = req.body;
@@ -84,7 +43,8 @@ app.post("/", async (req, res) => {
       throw new Error("All fields are required");
     }
 
-    const newData = new Mydata({
+    const newData = new Data({
+      user: req.session.user._id, // Associate with current user
       username: username.trim(),
       age: Number(age),
       specialization: specialization.trim(),
@@ -93,17 +53,21 @@ app.post("/", async (req, res) => {
 
     await newData.save();
     console.log("Data saved:", newData);
+    req.flash("success_msg", "Data added successfully!");
     res.redirect("/");
   } catch (err) {
     console.error("Error saving data:", err);
     try {
-      const allUsers = await Mydata.find().sort({ createdAt: -1 });
+      const userData = await Data.find({ user: req.session.user._id }).sort({
+        createdAt: -1,
+      });
       res.status(400).render("home", {
         my_title: "Home Page",
-        arr: allUsers,
+        arr: userData,
         error:
           "Error saving data: " + (err.message || "Please check your input."),
         formData: req.body || {},
+        req: req,
       });
     } catch (fetchErr) {
       console.error("Error fetching data after save error:", fetchErr);
@@ -112,13 +76,14 @@ app.post("/", async (req, res) => {
         arr: [],
         error: "Error saving data and retrieving existing data",
         formData: req.body || {},
+        req: req,
       });
     }
   }
-});
+};
 
 // GET: Display the edit form for a specific user
-app.get("/edit/:id", async (req, res) => {
+const getEditForm = async (req, res) => {
   console.log(`GET /edit/:id - Requested ID: ${req.params.id}`);
   try {
     const userId = req.params.id;
@@ -129,10 +94,15 @@ app.get("/edit/:id", async (req, res) => {
       return res.status(400).send("Invalid user ID format.");
     }
 
-    const userToEdit = await Mydata.findById(userId);
+    const userToEdit = await Data.findOne({
+      _id: userId,
+      user: req.session.user._id,
+    });
     if (!userToEdit) {
-      console.warn("User not found for edit:", userId);
-      return res.status(404).send("User not found");
+      console.warn("Data not found or user not authorized for edit:", userId);
+      return res
+        .status(404)
+        .send("Data not found or you are not authorized to edit this data");
     }
 
     console.log("User found for edit:", userToEdit.username);
@@ -144,10 +114,10 @@ app.get("/edit/:id", async (req, res) => {
     console.error(`Error fetching user for edit (ID: ${req.params.id}):`, err);
     res.status(500).send("Error fetching user data for edit.");
   }
-});
+};
 
 // POST: Update user (Form submission)
-app.post("/update/:id", async (req, res) => {
+const updateData = async (req, res) => {
   console.log("POST /update/:id - Request body:", req.body);
   try {
     const { username, age, specialization, address } = req.body;
@@ -168,8 +138,8 @@ app.post("/update/:id", async (req, res) => {
       });
     }
 
-    const updatedUser = await Mydata.findByIdAndUpdate(
-      id,
+    const updatedUser = await Data.findOneAndUpdate(
+      { _id: id, user: req.session.user._id }, // Only update if user owns the data
       {
         username: username.trim(),
         age: Number(age),
@@ -186,6 +156,7 @@ app.post("/update/:id", async (req, res) => {
       });
     }
 
+    req.flash("success_msg", "Data updated successfully!");
     res.redirect("/");
   } catch (err) {
     console.error("Error updating user:", err);
@@ -194,10 +165,10 @@ app.post("/update/:id", async (req, res) => {
       error: "Error updating user: " + err.message,
     });
   }
-});
+};
 
 // POST: Delete user (Form submission)
-app.post("/delete/:id", async (req, res) => {
+const deleteData = async (req, res) => {
   console.log("POST /delete/:id - Params:", req.params);
   try {
     const { id } = req.params;
@@ -206,21 +177,25 @@ app.post("/delete/:id", async (req, res) => {
       return res.status(400).send("Invalid User ID format");
     }
 
-    const deletedUser = await Mydata.findByIdAndDelete(id);
+    const deletedUser = await Data.findOneAndDelete({
+      _id: id,
+      user: req.session.user._id,
+    });
 
     if (!deletedUser) {
       return res.status(404).send("User not found");
     }
 
+    req.flash("success_msg", "Data deleted successfully!");
     res.redirect("/");
   } catch (err) {
     console.error("Error deleting user:", err);
     res.status(500).send("Error deleting user: " + err.message);
   }
-});
+};
 
 // API Routes (Optional - for programmatic access)
-app.put("/api/users/:id", async (req, res) => {
+const updateDataAPI = async (req, res) => {
   console.log("PUT /api/users/:id - Request body:", req.body);
   try {
     const { id } = req.params;
@@ -241,7 +216,7 @@ app.put("/api/users/:id", async (req, res) => {
       });
     }
 
-    const updatedUser = await Mydata.findByIdAndUpdate(
+    const updatedUser = await Data.findByIdAndUpdate(
       id,
       {
         username: username.trim(),
@@ -272,9 +247,9 @@ app.put("/api/users/:id", async (req, res) => {
       error: err.message,
     });
   }
-});
+};
 
-app.delete("/api/users/:id", async (req, res) => {
+const deleteDataAPI = async (req, res) => {
   console.log("DELETE /api/users/:id - Requested ID:", req.params.id);
   try {
     const { id } = req.params;
@@ -286,7 +261,7 @@ app.delete("/api/users/:id", async (req, res) => {
       });
     }
 
-    const deletedUser = await Mydata.findByIdAndDelete(id);
+    const deletedUser = await Data.findByIdAndDelete(id);
 
     if (!deletedUser) {
       return res.status(404).json({
@@ -308,41 +283,14 @@ app.delete("/api/users/:id", async (req, res) => {
       error: err.message,
     });
   }
-});
+};
 
-// catch 404 and forward to error handler
-app.use(function (req, res, next) {
-  next(createError(404));
-});
-
-// error handler
-app.use(function (err, req, res, next) {
-  res.status(err.status || 500);
-  res.json({ error: err.message });
-});
-
-// Handle 404 errors
-app.use((req, res) => {
-  res.status(404).send("Page not found");
-});
-
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error("Global error handler:", err);
-  res.status(500).send("Something went wrong!");
-});
-
-// --- End of Routes ---
-
-// Start the server
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}/`);
-  console.log(
-    "IMPORTANT: If you made changes, ensure you have STOPPED any old server instance (Ctrl+C) and RESTARTED this one."
-  );
-  console.log(
-    "Check terminal logs for messages starting with 'GET /edit/...' or 'POST /delete...' when you click the buttons."
-  );
-});
-
-module.exports = app;
+module.exports = {
+  getHomePage,
+  createData,
+  getEditForm,
+  updateData,
+  deleteData,
+  updateDataAPI,
+  deleteDataAPI,
+};

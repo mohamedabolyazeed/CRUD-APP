@@ -1,8 +1,14 @@
 {
   "name": "crud-app",
   "version": "1.0.0",
-  "description": "",
-  "keywords": [],
+  "description": "Modern CRUD Application with Client-Server Architecture",
+  "keywords": [
+    "crud",
+    "express",
+    "mongodb",
+    "authentication",
+    "nodejs"
+  ],
   "homepage": "https://github.com/mohamedabolyazeed22/Learn-Nodejs#readme",
   "bugs": {
     "url": "https://github.com/mohamedabolyazeed22/Learn-Nodejs/issues"
@@ -14,27 +20,39 @@
   "license": "ISC",
   "author": "",
   "type": "commonjs",
-  "main": "app.js",
+  "main": "server.js",
   "scripts": {
-    "comment": "npm run watch => Run the project with nodemon for automatic",
-    "start": "node ./bin/www",
-    "watch": "nodemon --ext js,ejs --ignore public/"
+    "start": "node server.js",
+    "dev": "nodemon server.js --ext js,ejs --ignore client/public/",
+    "watch": "nodemon server.js --ext js,ejs --ignore client/public/",
+    "build": "echo 'No build step required for this application'",
+    "test": "echo 'No tests specified'",
+    "lint": "echo 'No linting configured'",
+    "create-admin": "node server/utils/createAdmin.js"
   },
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.2",
     "bootstrap": "^5.3.3",
+    "connect-flash": "^0.1.1",
     "connect-livereload": "^0.6.1",
     "cookie-parser": "^1.4.7",
     "debug": "^4.4.1",
     "dotenv": "^16.4.7",
     "ejs": "^3.1.10",
     "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "livereload": "^0.9.3",
     "mongoose": "^8.9.5",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "nodemailer": "^7.0.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.9"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
   }
 }

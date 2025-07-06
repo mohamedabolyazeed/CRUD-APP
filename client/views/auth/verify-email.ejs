@@ -1,0 +1,103 @@
+<link
+  rel="shortcut icon"
+  href="./img/Black White Minimalist Professional Initial Logo.png"
+  type="image/x-icon"
+/>
+<link rel="stylesheet" href="/mystyle.css" />
+<div class="auth-container">
+  <h2 class="text-center mb-4">Verify Your Email</h2>
+
+  <% if (typeof success_msg !== 'undefined' && success_msg.length > 0) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= success_msg %>
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  <% } %> <% if (typeof error_msg !== 'undefined' && error_msg.length > 0) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= error_msg %>
+    <button
+      type="button"
+      class="btn-close"
+      data-bs-dismiss="alert"
+      aria-label="Close"
+    ></button>
+  </div>
+  <% } %>
+
+  <div class="verification-info">
+    <p class="text-center mb-4">
+      We've sent a verification code to <strong><%= email %></strong>
+    </p>
+    <p class="text-center text-muted mb-4">
+      Please check your email and enter the 6-digit code below
+    </p>
+    <div class="console-notice">
+      <p class="text-center mb-2">
+        <strong>🔧 Development Mode:</strong> Check your server console for the
+        OTP code
+      </p>
+      <p class="text-center text-muted small">
+        The verification code is logged to the terminal/console where you
+        started the server
+      </p>
+    </div>
+  </div>
+
+  <form action="/auth/verify-email" method="POST">
+    <input type="hidden" name="email" value="<%= email %>" />
+    <input type="hidden" name="token" value="<%= token %>" />
+
+    <div class="mb-3">
+      <label for="otp" class="form-label">Verification Code</label>
+      <input
+        type="text"
+        class="form-control otp-input"
+        id="otp"
+        name="otp"
+        maxlength="6"
+        pattern="[0-9]{6}"
+        placeholder="Enter 6-digit code"
+        required
+        autocomplete="off"
+      />
+      <% if (typeof errors !== 'undefined' && errors.otp) { %>
+      <div class="error-message"><%= errors.otp %></div>
+      <% } %>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100">Verify Email</button>
+  </form>
+
+  <div class="text-center mt-3">
+    <p class="mb-2">Didn't receive the code?</p>
+    <form action="/auth/resend-otp" method="POST" style="display: inline">
+      <input type="hidden" name="email" value="<%= email %>" />
+      <button type="submit" class="btn btn-link">Resend Code</button>
+    </form>
+    <p class="mt-2"><a href="/auth/signin">Back to Sign In</a></p>
+  </div>
+</div>
+
+<script>
+  // Auto-focus on OTP input
+  document.getElementById("otp").focus();
+
+  // Auto-submit when 6 digits are entered
+  document.getElementById("otp").addEventListener("input", function (e) {
+    if (this.value.length === 6) {
+      this.form.submit();
+    }
+  });
+
+  // Only allow numbers
+  document.getElementById("otp").addEventListener("keypress", function (e) {
+    if (!/[0-9]/.test(e.key)) {
+      e.preventDefault();
+    }
+  });
+</script>
