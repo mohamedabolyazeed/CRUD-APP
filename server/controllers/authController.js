@@ -5,14 +5,15 @@ const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+const JWT_SECRET = process.env.JWT_SECRET || "2R4pvUGbc7HbZdcpWKPV9XYqkUfUDq2zVtyM7Qa52vVPPVAqMtSRwpABjVwbegr7txgczLJDFYWyGwJCUA9ycm6PkCXyPhTyqTbqQqJTsYsQWZGxvzL7DTCjD9EA79CzFAJ7Rhy8xCHEdWLepUWBrwenpcLTQU83Hvt5cXkautw9QYynPngrhhKZest4ZtgK76dbZrQFzNBqTdnh5Gsmkex7FLLBDvrFDa5CZ93SShYftfTBkZB9AGe32gSxhhhBy9GBDeQhLmDQKQkMuGnqA64VL9gnDzRc4E3R9Qe3FpWVPKBMVk5qShshFfNkzcstAgRsS8EGum5s8UgEjbKEAv6UgNp5ePetGJCLbkgNH3sXPJrV2KBmAYqwRFSGHEAnFs4W2h4GUtDpPX5BAGHuS84BnBP8fM6hZEGG8ryryvqdNnvrsbFCzrdhA7Tz7W9TP8CamBsvEBJLvwsqQ49xgar5HrBXGbSvkZ5YRmgSH7WddvdKeehGwPVqN4TkrHY4MsRcaTT2LseSPnHhnkqVRGg8wJTREWREJHVDrJngFUTjNHYe7WJP29hfWPkJQ34BwaN9xb5BUXnM93CKwpdPj83B5RUMjCB4dGw26E8TxkgwfLfSqmhKCrrUHknj9s3WzQKESty4cHvuwgyR4VcrWejesVHxxwMntUYan3y7pfrub6T8X4SpPqbtXy5tz8zK";
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: process.env.MAILTRAP_HOST || "smtp.mailtrap.io",
+  port: process.env.MAILTRAP_PORT || 587,
   auth: {
-    user: process.env.EMAIL_USER || "your-email@gmail.com",
-    pass: process.env.EMAIL_PASS || "your-email-password",
+    user: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+    pass: process.env.MAILTRAP_PASS || process.env.EMAIL_PASS,
   },
 });
 
@@ -53,37 +54,60 @@ exports.signup = async (req, res) => {
     });
     await newUser.save();
 
-    // For development/testing: Log OTP to console instead of sending email
-    console.log(`\n📧 EMAIL VERIFICATION OTP for ${email}:`);
-    console.log(`🔐 Verification Code: ${otp}`);
-    console.log(`⏰ Expires in: 10 minutes\n`);
-
-    // Uncomment the following code when you have proper email configuration
-    /*
-    // Send verification email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Email Verification - CRUD App",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #667eea;">Email Verification</h2>
-          <p>Hello <strong>${name}</strong>,</p>
-          <p>Thank you for registering with our CRUD App. To complete your registration, please use the verification code below:</p>
-          
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
-            <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: 5px;">${otp}</h1>
+    // Check if email configuration is available
+    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+      console.log(
+        "Mailtrap configuration not found. Using console output for development."
+      );
+      console.log("   To configure Mailtrap, update your .env file with:");
+      console.log("   MAILTRAP_USER=your-mailtrap-username");
+      console.log("   MAILTRAP_PASS=your-mailtrap-password");
+      console.log(`\n EMAIL VERIFICATION OTP for ${email}:`);
+      console.log(` Verification Code: ${otp}`);
+      console.log(` Expires in: 10 minutes\n`);
+      req.flash(
+        "success_msg",
+        "Registration initiated! Check console for the verification code."
+      );
+    } else {
+      // Send verification email
+      const mailOptions = {
+        from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+        to: email,
+        subject: "Email Verification - CRUD App",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #667eea;">Email Verification</h2>
+            <p>Hello <strong>${name}</strong>,</p>
+            <p>Thank you for registering with our CRUD App. To complete your registration, please use the verification code below:</p>
+            
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+              <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: 5px;">${otp}</h1>
+            </div>
+            
+            <p><strong>This code will expire in 10 minutes.</strong></p>
+            <p>If you didn't create an account with us, please ignore this email.</p>
+            <p>Best regards,<br>CRUD App Team</p>
           </div>
-          
-          <p><strong>This code will expire in 10 minutes.</strong></p>
-          <p>If you didn't create an account with us, please ignore this email.</p>
-          <p>Best regards,<br>CRUD App Team</p>
-        </div>
-      `,
-    };
+        `,
+      };
 
-    await transporter.sendMail(mailOptions);
-    */
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(" Email verification OTP sent successfully");
+        req.flash(
+          "success_msg",
+          "Registration initiated! Please check your email for verification code."
+        );
+      } catch (emailError) {
+        console.error(" Email sending failed:", emailError);
+        req.flash(
+          "error_msg",
+          "Failed to send verification email. Please try again later."
+        );
+        return res.redirect("/auth/signup");
+      }
+    }
 
     // Store email in session for verification page
     req.session.pendingVerification = {
@@ -181,10 +205,28 @@ exports.logout = (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
+    console.log("Forgot password request for email:", email);
+
+    // Check if email is provided
+    if (!email) {
+      req.flash("error_msg", "Email is required");
+      return res.redirect("/auth/forgot-password");
+    }
+
     const user = await User.findOne({ email });
+    console.log("User found:", user ? "Yes" : "No");
 
     if (!user) {
-      req.flash("error_msg", "User not found or account is inactive");
+      req.flash("error_msg", "No account found with this email address");
+      return res.redirect("/auth/forgot-password");
+    }
+
+    // Check if user is active and email verified
+    if (!user.isActive || !user.isEmailVerified) {
+      req.flash(
+        "error_msg",
+        "Account is not active. Please verify your email first."
+      );
       return res.redirect("/auth/forgot-password");
     }
 
@@ -197,29 +239,73 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
     await user.save();
+    console.log("Reset token generated and saved for user:", user.email);
 
-    // Send reset email
+    // For development/testing: Log reset link to console instead of sending email
     const resetUrl = `${req.protocol}://${req.get(
       "host"
     )}/auth/reset-password/${resetToken}`;
+
+    console.log(`\n PASSWORD RESET LINK for ${email}:`);
+    console.log(` Reset URL: ${resetUrl}`);
+    console.log(` Expires in: 1 hour\n`);
+
+    // Check if email configuration is available
+    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+      console.log(
+        "  Mailtrap configuration not found. Using console output for development."
+      );
+      console.log("   To configure Mailtrap, update your .env file with:");
+      console.log("   MAILTRAP_USER=your-mailtrap-username");
+      console.log("   MAILTRAP_PASS=your-mailtrap-password");
+      req.flash(
+        "success_msg",
+        "Password reset link generated! Check console for the reset link."
+      );
+      return res.redirect("/auth/signin");
+    }
+
+    // Send reset email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
       to: user.email,
-      subject: "Password Reset Request",
+      subject: "Password Reset Request - CRUD App",
       html: `
-                <h1>You requested a password reset</h1>
-                <p>Click this <a href="${resetUrl}">link</a> to reset your password.</p>
-                <p>This link will expire in 1 hour.</p>
-                <p>If you didn't request this, please ignore this email.</p>
-            `,
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #667eea;">Password Reset Request</h2>
+          <p>Hello <strong>${user.name}</strong>,</p>
+          <p>You requested a password reset for your CRUD App account.</p>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;">
+              Reset Password
+            </a>
+          </div>
+          
+          <p><strong>This link will expire in 1 hour.</strong></p>
+          <p>If you didn't request this password reset, please ignore this email.</p>
+          <p>Best regards,<br>CRUD App Team</p>
+        </div>
+      `,
     };
 
-    await transporter.sendMail(mailOptions);
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log(" Password reset email sent successfully");
+      req.flash("success_msg", "Password reset email sent! Check your inbox.");
+    } catch (emailError) {
+      console.error(" Email sending failed:", emailError);
+      req.flash("error_msg", "Failed to send email. Please try again later.");
+      return res.redirect("/auth/forgot-password");
+    }
 
-    req.flash("success_msg", "Password reset email sent");
     res.redirect("/auth/signin");
   } catch (error) {
-    req.flash("error_msg", "Server error during password reset");
+    console.error(" Forgot password error:", error);
+    req.flash(
+      "error_msg",
+      "Server error during password reset. Please try again."
+    );
     res.redirect("/auth/forgot-password");
   }
 };
@@ -304,38 +390,56 @@ exports.resendOtp = async (req, res) => {
     user.emailVerificationExpires = Date.now() + 600000; // 10 minutes
     await user.save();
 
-    // For development/testing: Log OTP to console instead of sending email
-    console.log(`\n📧 RESEND OTP for ${email}:`);
-    console.log(`🔐 New Verification Code: ${otp}`);
-    console.log(`⏰ Expires in: 10 minutes\n`);
-
-    // Uncomment the following code when you have proper email configuration
-    /*
-    // Send new verification email
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Email Verification Code - CRUD App",
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #667eea;">New Verification Code</h2>
-          <p>Hello <strong>${user.name}</strong>,</p>
-          <p>Here's your new verification code:</p>
-          
-          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
-            <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: 5px;">${otp}</h1>
+    // Check if email configuration is available
+    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+      console.log(
+        "  Mailtrap configuration not found. Using console output for development."
+      );
+      console.log("   To configure Mailtrap, update your .env file with:");
+      console.log("   MAILTRAP_USER=your-mailtrap-username");
+      console.log("   MAILTRAP_PASS=your-mailtrap-password");
+      console.log(`\n RESEND OTP for ${email}:`);
+      console.log(` New Verification Code: ${otp}`);
+      console.log(` Expires in: 10 minutes\n`);
+      req.flash(
+        "success_msg",
+        "New verification code sent! Check console for the code."
+      );
+    } else {
+      // Send new verification email
+      const mailOptions = {
+        from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+        to: email,
+        subject: "Email Verification Code - CRUD App",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #667eea;">New Verification Code</h2>
+            <p>Hello <strong>${user.name}</strong>,</p>
+            <p>Here's your new verification code:</p>
+            
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 10px; margin: 20px 0;">
+              <h1 style="margin: 0; font-size: 2.5rem; letter-spacing: 5px;">${otp}</h1>
+            </div>
+            
+            <p><strong>This code will expire in 10 minutes.</strong></p>
+            <p>Best regards,<br>CRUD App Team</p>
           </div>
-          
-          <p><strong>This code will expire in 10 minutes.</strong></p>
-          <p>Best regards,<br>CRUD App Team</p>
-        </div>
-      `,
-    };
+        `,
+      };
 
-    await transporter.sendMail(mailOptions);
-    */
-
-    req.flash("success_msg", "New verification code sent to your email!");
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(" Resend OTP email sent successfully");
+        req.flash("success_msg", "New verification code sent to your email!");
+      } catch (emailError) {
+        console.error(" Email sending failed:", emailError);
+        req.flash(
+          "error_msg",
+          "Failed to send verification email. Please try again later."
+        );
+        return res.redirect("/auth/verify-email");
+      }
+    }
     res.redirect("/auth/verify-email");
   } catch (error) {
     console.error("Resend OTP error:", error);
@@ -347,7 +451,24 @@ exports.resendOtp = async (req, res) => {
 // Reset Password
 exports.resetPassword = async (req, res) => {
   try {
-    const { token, password } = req.body;
+    const { token, password, confirmPassword } = req.body;
+    console.log("Reset password request received");
+
+    // Validate input
+    if (!token) {
+      req.flash("error_msg", "Reset token is missing");
+      return res.redirect("/auth/forgot-password");
+    }
+
+    if (!password || password.length < 6) {
+      req.flash("error_msg", "Password must be at least 6 characters long");
+      return res.redirect(`/auth/reset-password/${token}`);
+    }
+
+    if (password !== confirmPassword) {
+      req.flash("error_msg", "Passwords do not match");
+      return res.redirect(`/auth/reset-password/${token}`);
+    }
 
     // Hash token
     const resetPasswordToken = crypto
@@ -355,25 +476,41 @@ exports.resetPassword = async (req, res) => {
       .update(token)
       .digest("hex");
 
+    console.log("Looking for user with reset token...");
     const user = await User.findOne({
       resetPasswordToken,
       resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      req.flash("error_msg", "Invalid or expired reset token");
+      console.log("No user found with valid reset token");
+      req.flash(
+        "error_msg",
+        "Invalid or expired reset token. Please request a new password reset."
+      );
       return res.redirect("/auth/forgot-password");
     }
 
+    console.log("User found, updating password for:", user.email);
+
+    // Update password and clear reset token
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    req.flash("success_msg", "Password has been reset successfully");
+    console.log("Password updated successfully");
+    req.flash(
+      "success_msg",
+      "Password has been reset successfully! You can now sign in with your new password."
+    );
     res.redirect("/auth/signin");
   } catch (error) {
-    req.flash("error_msg", "Server error during password reset");
+    console.error(" Reset password error:", error);
+    req.flash(
+      "error_msg",
+      "Server error during password reset. Please try again."
+    );
     res.redirect("/auth/forgot-password");
   }
 };
