@@ -1,21 +1,16 @@
 const express = require("express");
 const router = express.Router();
-const adminAuth = require("../middleware/adminAuth");
 const adminController = require("../controllers/adminController");
+const adminAuthMiddleware = require("../middleware/adminAuth");
 
-// Apply admin authentication middleware to all admin routes
-router.use(adminAuth);
+// Apply admin auth middleware to all admin routes
+router.use(adminAuthMiddleware);
 
-// Admin Dashboard
-router.get("/", adminController.dashboard);
-
-// User Management
-router.get("/users", adminController.getAllUsers);
-router.put("/users/:userId/role", adminController.updateUserRole);
-router.put("/users/:userId/status", adminController.toggleUserStatus);
-router.delete("/users/:userId", adminController.deleteUser);
-
-// Site Statistics
-router.get("/stats", adminController.getSiteStats);
+// API routes for admin functionality
+router.get("/api/dashboard", adminController.getDashboardAPI);
+router.get("/api/users", adminController.getUsersAPI);
+router.put("/api/users/:id/role", adminController.updateUserRoleAPI);
+router.put("/api/users/:id/status", adminController.updateUserStatusAPI);
+router.delete("/api/users/:id", adminController.deleteUserAPI);
 
 module.exports = router;

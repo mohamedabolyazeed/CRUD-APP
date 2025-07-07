@@ -34,11 +34,7 @@ const userHelpers = {
   },
 
   async comparePassword(password, hashedPassword) {
-    console.log("Comparing passwords in userHelpers");
-    console.log("Input password length:", password.length);
-    console.log("Hashed password length:", hashedPassword.length);
     const result = await bcrypt.compare(password, hashedPassword);
-    console.log("Password comparison result:", result);
     return result;
   },
 };

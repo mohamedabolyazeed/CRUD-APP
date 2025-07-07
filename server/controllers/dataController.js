@@ -1,46 +1,38 @@
 const Data = require("../models/Data");
 const mongoose = require("mongoose");
 
-// GET: Display home page with user's data only (protected by auth)
-const getHomePage = async (req, res) => {
-  console.log("GET / - Request received for user:", req.session.user._id);
+// GET: Get all data for the authenticated user
+const getDataAPI = async (req, res) => {
   try {
     // Get only the current user's data entries
     const userData = await Data.find({ user: req.session.user._id }).sort({
       createdAt: -1,
     });
-    res.render("home", {
-      my_title: "Home Page",
-      arr: userData,
-      error: null,
-      formData: {},
-      success_msg: req.flash("success_msg"),
-      error_msg: req.flash("error_msg"),
-      req: req,
+
+    res.json({
+      success: true,
+      data: userData,
     });
   } catch (err) {
-    console.error("Error fetching data for home page:", err);
-    res.status(500).render("home", {
-      my_title: "Home Page",
-      arr: [],
+    console.error("Error fetching data:", err);
+    res.status(500).json({
+      success: false,
       error: "Error retrieving data from database",
-      formData: {},
-      success_msg: req.flash("success_msg"),
-      error_msg: req.flash("error_msg"),
-      req: req,
     });
   }
 };
 
-// POST: Create a new user
-const createData = async (req, res) => {
-  console.log("POST / - Request body:", req.body);
+// POST: Create a new data entry
+const createDataAPI = async (req, res) => {
   try {
     const { username, age, specialization, address } = req.body;
 
     // Validate required fields
     if (!username || !age || !specialization || !address) {
-      throw new Error("All fields are required");
+      return res.status(400).json({
+        success: false,
+        error: "All fields are required",
+      });
     }
 
     const newData = new Data({
@@ -52,93 +44,84 @@ const createData = async (req, res) => {
     });
 
     await newData.save();
-    console.log("Data saved:", newData);
-    req.flash("success_msg", "Data added successfully!");
-    res.redirect("/");
+
+    res.status(201).json({
+      success: true,
+      message: "Data added successfully!",
+      data: newData,
+    });
   } catch (err) {
     console.error("Error saving data:", err);
-    try {
-      const userData = await Data.find({ user: req.session.user._id }).sort({
-        createdAt: -1,
-      });
-      res.status(400).render("home", {
-        my_title: "Home Page",
-        arr: userData,
-        error:
-          "Error saving data: " + (err.message || "Please check your input."),
-        formData: req.body || {},
-        req: req,
-      });
-    } catch (fetchErr) {
-      console.error("Error fetching data after save error:", fetchErr);
-      res.status(500).render("home", {
-        my_title: "Home Page",
-        arr: [],
-        error: "Error saving data and retrieving existing data",
-        formData: req.body || {},
-        req: req,
-      });
-    }
+    res.status(500).json({
+      success: false,
+      error:
+        "Error saving data: " + (err.message || "Please check your input."),
+    });
   }
 };
 
-// GET: Display the edit form for a specific user
-const getEditForm = async (req, res) => {
-  console.log(`GET /edit/:id - Requested ID: ${req.params.id}`);
+// GET: Get a specific data entry by ID
+const getDataByIdAPI = async (req, res) => {
   try {
-    const userId = req.params.id;
+    const dataId = req.params.id;
 
     // Validate ObjectId format
-    if (!mongoose.Types.ObjectId.isValid(userId)) {
-      console.warn("Invalid ObjectId format for edit:", userId);
-      return res.status(400).send("Invalid user ID format.");
+    if (!mongoose.Types.ObjectId.isValid(dataId)) {
+      console.warn("Invalid ObjectId format:", dataId);
+      return res.status(400).json({
+        success: false,
+        error: "Invalid data ID format",
+      });
     }
 
-    const userToEdit = await Data.findOne({
-      _id: userId,
+    const data = await Data.findOne({
+      _id: dataId,
       user: req.session.user._id,
     });
-    if (!userToEdit) {
-      console.warn("Data not found or user not authorized for edit:", userId);
-      return res
-        .status(404)
-        .send("Data not found or you are not authorized to edit this data");
+
+    if (!data) {
+      console.warn("Data not found or user not authorized:", dataId);
+      return res.status(404).json({
+        success: false,
+        error: "Data not found or you are not authorized to access this data",
+      });
     }
 
-    console.log("User found for edit:", userToEdit.username);
-    res.render("edit", {
-      user: userToEdit,
-      my_title: "Edit Information",
+    res.json({
+      success: true,
+      data: data,
     });
   } catch (err) {
-    console.error(`Error fetching user for edit (ID: ${req.params.id}):`, err);
-    res.status(500).send("Error fetching user data for edit.");
+    console.error(`Error fetching data (ID: ${req.params.id}):`, err);
+    res.status(500).json({
+      success: false,
+      error: "Error fetching data",
+    });
   }
 };
 
-// POST: Update user (Form submission)
-const updateData = async (req, res) => {
-  console.log("POST /update/:id - Request body:", req.body);
+// PUT: Update a data entry
+const updateDataAPI = async (req, res) => {
   try {
     const { username, age, specialization, address } = req.body;
     const { id } = req.params;
 
     // Validate required fields
     if (!username || !age || !specialization || !address) {
-      return res.status(400).render("edit", {
-        user: { _id: id, ...req.body },
+      return res.status(400).json({
+        success: false,
         error: "All fields are required",
       });
     }
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).render("edit", {
-        user: { _id: id, ...req.body },
-        error: "Invalid User ID format",
+      return res.status(400).json({
+        success: false,
+        error: "Invalid data ID format",
       });
     }
 
-    const updatedUser = await Data.findOneAndUpdate(
+    const updatedData = await Data.findOneAndUpdate(
       { _id: id, user: req.session.user._id }, // Only update if user owns the data
       {
         username: username.trim(),
@@ -149,148 +132,69 @@ const updateData = async (req, res) => {
       { new: true, runValidators: true }
     );
 
-    if (!updatedUser) {
-      return res.status(404).render("edit", {
-        user: { _id: id, ...req.body },
-        error: "User not found",
+    if (!updatedData) {
+      return res.status(404).json({
+        success: false,
+        error: "Data not found or you are not authorized to update this data",
       });
     }
 
-    req.flash("success_msg", "Data updated successfully!");
-    res.redirect("/");
+    res.json({
+      success: true,
+      message: "Data updated successfully!",
+      data: updatedData,
+    });
   } catch (err) {
-    console.error("Error updating user:", err);
-    res.status(500).render("edit", {
-      user: { _id: req.params.id, ...req.body },
-      error: "Error updating user: " + err.message,
+    console.error("Error updating data:", err);
+    res.status(500).json({
+      success: false,
+      error: "Error updating data: " + err.message,
     });
   }
 };
 
-// POST: Delete user (Form submission)
-const deleteData = async (req, res) => {
-  console.log("POST /delete/:id - Params:", req.params);
+// DELETE: Delete a data entry
+const deleteDataAPI = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).send("Invalid User ID format");
+      return res.status(400).json({
+        success: false,
+        error: "Invalid data ID format",
+      });
     }
 
-    const deletedUser = await Data.findOneAndDelete({
+    const deletedData = await Data.findOneAndDelete({
       _id: id,
       user: req.session.user._id,
     });
 
-    if (!deletedUser) {
-      return res.status(404).send("User not found");
-    }
-
-    req.flash("success_msg", "Data deleted successfully!");
-    res.redirect("/");
-  } catch (err) {
-    console.error("Error deleting user:", err);
-    res.status(500).send("Error deleting user: " + err.message);
-  }
-};
-
-// API Routes (Optional - for programmatic access)
-const updateDataAPI = async (req, res) => {
-  console.log("PUT /api/users/:id - Request body:", req.body);
-  try {
-    const { id } = req.params;
-    const { username, age, specialization, address } = req.body;
-
-    // Validate required fields
-    if (!username || !age || !specialization || !address) {
-      return res.status(400).json({
-        success: false,
-        message: "All fields are required for update",
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid User ID format",
-      });
-    }
-
-    const updatedUser = await Data.findByIdAndUpdate(
-      id,
-      {
-        username: username.trim(),
-        age: Number(age),
-        specialization: specialization.trim(),
-        address: address.trim(),
-      },
-      { new: true, runValidators: true }
-    );
-
-    if (!updatedUser) {
+    if (!deletedData) {
       return res.status(404).json({
         success: false,
-        message: "User not found",
+        error: "Data not found or you are not authorized to delete this data",
       });
     }
 
     res.json({
       success: true,
-      message: "User updated successfully",
-      data: updatedUser,
+      message: "Data deleted successfully!",
+      data: deletedData,
     });
   } catch (err) {
-    console.error(`Error updating user (ID: ${req.params.id}):`, err);
+    console.error("Error deleting data:", err);
     res.status(500).json({
       success: false,
-      message: "Error updating user",
-      error: err.message,
-    });
-  }
-};
-
-const deleteDataAPI = async (req, res) => {
-  console.log("DELETE /api/users/:id - Requested ID:", req.params.id);
-  try {
-    const { id } = req.params;
-
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid User ID format",
-      });
-    }
-
-    const deletedUser = await Data.findByIdAndDelete(id);
-
-    if (!deletedUser) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    res.json({
-      success: true,
-      message: "User deleted successfully",
-      data: deletedUser,
-    });
-  } catch (err) {
-    console.error(`Error deleting user (ID: ${req.params.id}):`, err);
-    res.status(500).json({
-      success: false,
-      message: "Error deleting user",
-      error: err.message,
+      error: "Error deleting data: " + err.message,
     });
   }
 };
 
 module.exports = {
-  getHomePage,
-  createData,
-  getEditForm,
-  updateData,
-  deleteData,
+  getDataAPI,
+  createDataAPI,
+  getDataByIdAPI,
   updateDataAPI,
   deleteDataAPI,
 };

@@ -5,15 +5,18 @@ const nodemailer = require("nodemailer");
 const { validationResult } = require("express-validator");
 
 // JWT Secret
-const JWT_SECRET = process.env.JWT_SECRET || "2R4pvUGbc7HbZdcpWKPV9XYqkUfUDq2zVtyM7Qa52vVPPVAqMtSRwpABjVwbegr7txgczLJDFYWyGwJCUA9ycm6PkCXyPhTyqTbqQqJTsYsQWZGxvzL7DTCjD9EA79CzFAJ7Rhy8xCHEdWLepUWBrwenpcLTQU83Hvt5cXkautw9QYynPngrhhKZest4ZtgK76dbZrQFzNBqTdnh5Gsmkex7FLLBDvrFDa5CZ93SShYftfTBkZB9AGe32gSxhhhBy9GBDeQhLmDQKQkMuGnqA64VL9gnDzRc4E3R9Qe3FpWVPKBMVk5qShshFfNkzcstAgRsS8EGum5s8UgEjbKEAv6UgNp5ePetGJCLbkgNH3sXPJrV2KBmAYqwRFSGHEAnFs4W2h4GUtDpPX5BAGHuS84BnBP8fM6hZEGG8ryryvqdNnvrsbFCzrdhA7Tz7W9TP8CamBsvEBJLvwsqQ49xgar5HrBXGbSvkZ5YRmgSH7WddvdKeehGwPVqN4TkrHY4MsRcaTT2LseSPnHhnkqVRGg8wJTREWREJHVDrJngFUTjNHYe7WJP29hfWPkJQ34BwaN9xb5BUXnM93CKwpdPj83B5RUMjCB4dGw26E8TxkgwfLfSqmhKCrrUHknj9s3WzQKESty4cHvuwgyR4VcrWejesVHxxwMntUYan3y7pfrub6T8X4SpPqbtXy5tz8zK";
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  "2R4pvUGbc7HbZdcpWKPV9XYqkUfUDq2zVtyM7Qa52vVPPVAqMtSRwpABjVwbegr7txgczLJDFYWyGwJCUA9ycm6PkCXyPhTyqTbqQqJTsYsQWZGxvzL7DTCjD9EA79CzFAJ7Rhy8xCHEdWLepUWBrwenpcLTQU83Hvt5cXkautw9QYynPngrhhKZest4ZtgK76dbZrQFzNBqTdnh5Gsmkex7FLLBDvrFDa5CZ93SShYftfTBkZB9AGe32gSxhhhBy9GBDeQhLmDQKQkMuGnqA64VL9gnDzRc4E3R9Qe3FpWVPKBMVk5qShshFfNkzcstAgRsS8EGum5s8UgEjbKEAv6UgNp5ePetGJCLbkgNH3sXPJrV2KBmAYqwRFSGHEAnFs4W2h4GUtDpPX5BAGHuS84BnBP8fM6hZEGG8ryryvqdNnvrsbFCzrdhA7Tz7W9TP8CamBsvEBJLvwsqQ49xgar5HrBXGbSvkZ5YRmgSH7WddvdKeehGwPVqN4TkrHY4MsRcaTT2LseSPnHhnkqVRGg8wJTREWREJHVDrJngFUTjNHYe7WJP29hfWPkJQ34BwaN9xb5BUXnM93CKwpdPj83B5RUMjCB4dGw26E8TxkgwfLfSqmhKCrrUHknj9s3WzQKESty4cHvuwgyR4VcrWejesVHxxwMntUYan3y7pfrub6T8X4SpPqbtXy5tz8zK";
 
 // Email configuration
 const transporter = nodemailer.createTransport({
-  host: process.env.MAILTRAP_HOST || "smtp.mailtrap.io",
-  port: process.env.MAILTRAP_PORT || 587,
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: process.env.SMTP_PORT || 587,
+  secure: process.env.SMTP_SECURE === "true" || false, // true for 465, false for other ports
   auth: {
-    user: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
-    pass: process.env.MAILTRAP_PASS || process.env.EMAIL_PASS,
+    user: process.env.SMTP_USER || process.env.EMAIL_USER,
+    pass: process.env.SMTP_PASS || process.env.EMAIL_PASS,
   },
 });
 
@@ -22,8 +25,10 @@ exports.signup = async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      req.flash("error_msg", errors.array()[0].msg);
-      return res.redirect("/auth/signup");
+      return res.status(400).json({
+        success: false,
+        error: errors.array()[0].msg,
+      });
     }
 
     const { name, email, password } = req.body;
@@ -31,8 +36,10 @@ exports.signup = async (req, res) => {
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      req.flash("error_msg", "Email is already registered");
-      return res.redirect("/auth/signup");
+      return res.status(400).json({
+        success: false,
+        error: "Email is already registered",
+      });
     }
 
     // Generate OTP
@@ -55,24 +62,22 @@ exports.signup = async (req, res) => {
     await newUser.save();
 
     // Check if email configuration is available
-    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+    if (!process.env.SMTP_USER && !process.env.EMAIL_USER) {
       console.log(
-        "Mailtrap configuration not found. Using console output for development."
+        "SMTP configuration not found. Using console output for development."
       );
-      console.log("   To configure Mailtrap, update your .env file with:");
-      console.log("   MAILTRAP_USER=your-mailtrap-username");
-      console.log("   MAILTRAP_PASS=your-mailtrap-password");
-      console.log(`\n EMAIL VERIFICATION OTP for ${email}:`);
+      console.log("   To configure SMTP email, update your .env file with:");
+      console.log("   SMTP_HOST=your-smtp-host (e.g., smtp.gmail.com)");
+      console.log("   SMTP_PORT=587");
+      console.log("   SMTP_USER=your-email@domain.com");
+      console.log("   SMTP_PASS=your-app-password");
+      console.log(`\n EMAIL VERIFICATION OTP:`);
       console.log(` Verification Code: ${otp}`);
       console.log(` Expires in: 10 minutes\n`);
-      req.flash(
-        "success_msg",
-        "Registration initiated! Check console for the verification code."
-      );
     } else {
       // Send verification email
       const mailOptions = {
-        from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+        from: process.env.SMTP_USER || process.env.EMAIL_USER,
         to: email,
         subject: "Email Verification - CRUD App",
         html: `
@@ -95,17 +100,12 @@ exports.signup = async (req, res) => {
       try {
         await transporter.sendMail(mailOptions);
         console.log(" Email verification OTP sent successfully");
-        req.flash(
-          "success_msg",
-          "Registration initiated! Please check your email for verification code."
-        );
       } catch (emailError) {
         console.error(" Email sending failed:", emailError);
-        req.flash(
-          "error_msg",
-          "Failed to send verification email. Please try again later."
-        );
-        return res.redirect("/auth/signup");
+        return res.status(500).json({
+          success: false,
+          error: "Failed to send verification email. Please try again later.",
+        });
       }
     }
 
@@ -115,15 +115,21 @@ exports.signup = async (req, res) => {
       token: emailVerificationToken,
     };
 
-    req.flash(
-      "success_msg",
-      "Registration initiated! Please check your email for verification code."
-    );
-    res.redirect("/auth/verify-email");
+    res.status(201).json({
+      success: true,
+      message:
+        "Registration initiated! Please check your email for verification code.",
+      data: {
+        email: email,
+        token: emailVerificationToken,
+      },
+    });
   } catch (error) {
     console.error("Signup error:", error);
-    req.flash("error_msg", "Server error during registration");
-    res.redirect("/auth/signup");
+    res.status(500).json({
+      success: false,
+      error: "Server error during registration",
+    });
   }
 };
 
@@ -131,42 +137,39 @@ exports.signup = async (req, res) => {
 exports.signin = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("Signin attempt for email:", email);
-
     // Check if user exists
     const user = await User.findOne({ email });
-    console.log("User found:", user ? "Yes" : "No");
 
     if (!user) {
-      console.log("User not found");
-      req.flash("error_msg", "Invalid credentials");
-      return res.redirect("/auth/signin");
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+      });
     }
 
     if (!user.isEmailVerified) {
-      console.log("Email not verified");
-      req.flash(
-        "error_msg",
-        "Please verify your email first. Check your inbox for verification code."
-      );
-      return res.redirect("/auth/signin");
+      return res.status(401).json({
+        success: false,
+        error:
+          "Please verify your email first. Check your inbox for verification code.",
+      });
     }
 
     if (!user.isActive) {
-      console.log("User inactive");
-      req.flash("error_msg", "Account is inactive. Please contact support.");
-      return res.redirect("/auth/signin");
+      return res.status(401).json({
+        success: false,
+        error: "Account is inactive. Please contact support.",
+      });
     }
 
     // Check password
-    console.log("Comparing passwords...");
     const isMatch = await user.comparePassword(password);
-    console.log("Password match:", isMatch);
 
     if (!isMatch) {
-      console.log("Password mismatch");
-      req.flash("error_msg", "Invalid credentials");
-      return res.redirect("/auth/signin");
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+      });
     }
 
     // Update last login
@@ -181,13 +184,17 @@ exports.signin = async (req, res) => {
       role: user.role,
     };
 
-    console.log("Signin successful, setting session:", req.session.user);
-    req.flash("success_msg", "Welcome back!");
-    res.redirect("/");
+    res.json({
+      success: true,
+      message: "Welcome back!",
+      user: req.session.user,
+    });
   } catch (error) {
     console.error("Signin error:", error);
-    req.flash("error_msg", "Server error during sign in");
-    res.redirect("/auth/signin");
+    res.status(500).json({
+      success: false,
+      error: "Server error during sign in",
+    });
   }
 };
 
@@ -196,8 +203,15 @@ exports.logout = (req, res) => {
   req.session.destroy((err) => {
     if (err) {
       console.error("Error destroying session:", err);
+      return res.status(500).json({
+        success: false,
+        error: "Error during logout",
+      });
     }
-    res.redirect("/auth/signin");
+    res.json({
+      success: true,
+      message: "Logged out successfully",
+    });
   });
 };
 
@@ -205,29 +219,29 @@ exports.logout = (req, res) => {
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log("Forgot password request for email:", email);
-
     // Check if email is provided
     if (!email) {
-      req.flash("error_msg", "Email is required");
-      return res.redirect("/auth/forgot-password");
+      return res.status(400).json({
+        success: false,
+        error: "Email is required",
+      });
     }
 
     const user = await User.findOne({ email });
-    console.log("User found:", user ? "Yes" : "No");
 
     if (!user) {
-      req.flash("error_msg", "No account found with this email address");
-      return res.redirect("/auth/forgot-password");
+      return res.status(404).json({
+        success: false,
+        error: "No account found with this email address",
+      });
     }
 
     // Check if user is active and email verified
     if (!user.isActive || !user.isEmailVerified) {
-      req.flash(
-        "error_msg",
-        "Account is not active. Please verify your email first."
-      );
-      return res.redirect("/auth/forgot-password");
+      return res.status(400).json({
+        success: false,
+        error: "Account is not active. Please verify your email first.",
+      });
     }
 
     // Generate reset token
@@ -239,35 +253,37 @@ exports.forgotPassword = async (req, res) => {
     user.resetPasswordExpires = Date.now() + 3600000; // 1 hour
 
     await user.save();
-    console.log("Reset token generated and saved for user:", user.email);
 
     // For development/testing: Log reset link to console instead of sending email
     const resetUrl = `${req.protocol}://${req.get(
       "host"
     )}/auth/reset-password/${resetToken}`;
 
-    console.log(`\n PASSWORD RESET LINK for ${email}:`);
+    console.log(`\n PASSWORD RESET LINK:`);
     console.log(` Reset URL: ${resetUrl}`);
     console.log(` Expires in: 1 hour\n`);
 
     // Check if email configuration is available
-    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+    if (!process.env.SMTP_USER && !process.env.EMAIL_USER) {
       console.log(
-        "  Mailtrap configuration not found. Using console output for development."
+        "  SMTP configuration not found. Using console output for development."
       );
-      console.log("   To configure Mailtrap, update your .env file with:");
-      console.log("   MAILTRAP_USER=your-mailtrap-username");
-      console.log("   MAILTRAP_PASS=your-mailtrap-password");
-      req.flash(
-        "success_msg",
-        "Password reset link generated! Check console for the reset link."
-      );
-      return res.redirect("/auth/signin");
+      console.log("   To configure SMTP email, update your .env file with:");
+      console.log("   SMTP_HOST=your-smtp-host (e.g., smtp.gmail.com)");
+      console.log("   SMTP_PORT=587");
+      console.log("   SMTP_USER=your-email@domain.com");
+      console.log("   SMTP_PASS=your-app-password");
+      return res.json({
+        success: true,
+        message:
+          "Password reset link generated! Check console for the reset link.",
+        resetUrl: resetUrl,
+      });
     }
 
     // Send reset email
     const mailOptions = {
-      from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+      from: process.env.SMTP_USER || process.env.EMAIL_USER,
       to: user.email,
       subject: "Password Reset Request - CRUD App",
       html: `
@@ -292,21 +308,23 @@ exports.forgotPassword = async (req, res) => {
     try {
       await transporter.sendMail(mailOptions);
       console.log(" Password reset email sent successfully");
-      req.flash("success_msg", "Password reset email sent! Check your inbox.");
+      res.json({
+        success: true,
+        message: "Password reset email sent! Check your inbox.",
+      });
     } catch (emailError) {
       console.error(" Email sending failed:", emailError);
-      req.flash("error_msg", "Failed to send email. Please try again later.");
-      return res.redirect("/auth/forgot-password");
+      res.status(500).json({
+        success: false,
+        error: "Failed to send email. Please try again later.",
+      });
     }
-
-    res.redirect("/auth/signin");
   } catch (error) {
     console.error(" Forgot password error:", error);
-    req.flash(
-      "error_msg",
-      "Server error during password reset. Please try again."
-    );
-    res.redirect("/auth/forgot-password");
+    res.status(500).json({
+      success: false,
+      error: "Server error during password reset. Please try again.",
+    });
   }
 };
 
@@ -318,8 +336,10 @@ exports.verifyEmail = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      req.flash("error_msg", "User not found");
-      return res.redirect("/auth/signup");
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
     }
 
     // Check if OTP is valid and not expired
@@ -328,8 +348,10 @@ exports.verifyEmail = async (req, res) => {
       user.emailVerificationToken !== hashedOtp ||
       user.emailVerificationExpires < Date.now()
     ) {
-      req.flash("error_msg", "Invalid or expired verification code");
-      return res.redirect("/auth/verify-email");
+      return res.status(400).json({
+        success: false,
+        error: "Invalid or expired verification code",
+      });
     }
 
     // Activate user account
@@ -351,15 +373,17 @@ exports.verifyEmail = async (req, res) => {
     // Clear pending verification
     delete req.session.pendingVerification;
 
-    req.flash(
-      "success_msg",
-      "Email verified successfully! Welcome to your account."
-    );
-    res.redirect("/");
+    res.json({
+      success: true,
+      message: "Email verified successfully! Welcome to your account.",
+      user: req.session.user,
+    });
   } catch (error) {
     console.error("Email verification error:", error);
-    req.flash("error_msg", "Server error during email verification");
-    res.redirect("/auth/verify-email");
+    res.status(500).json({
+      success: false,
+      error: "Server error during email verification",
+    });
   }
 };
 
@@ -371,14 +395,18 @@ exports.resendOtp = async (req, res) => {
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      req.flash("error_msg", "User not found");
-      return res.redirect("/auth/signup");
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
     }
 
     // Check if user is already verified
     if (user.isEmailVerified) {
-      req.flash("error_msg", "Email is already verified");
-      return res.redirect("/auth/signin");
+      return res.status(400).json({
+        success: false,
+        error: "Email is already verified",
+      });
     }
 
     // Generate new OTP
@@ -391,24 +419,26 @@ exports.resendOtp = async (req, res) => {
     await user.save();
 
     // Check if email configuration is available
-    if (!process.env.MAILTRAP_USER || !process.env.MAILTRAP_PASS) {
+    if (!process.env.SMTP_USER && !process.env.EMAIL_USER) {
       console.log(
-        "  Mailtrap configuration not found. Using console output for development."
+        "  SMTP configuration not found. Using console output for development."
       );
-      console.log("   To configure Mailtrap, update your .env file with:");
-      console.log("   MAILTRAP_USER=your-mailtrap-username");
-      console.log("   MAILTRAP_PASS=your-mailtrap-password");
-      console.log(`\n RESEND OTP for ${email}:`);
+      console.log("   To configure SMTP email, update your .env file with:");
+      console.log("   SMTP_HOST=your-smtp-host (e.g., smtp.gmail.com)");
+      console.log("   SMTP_PORT=587");
+      console.log("   SMTP_USER=your-email@domain.com");
+      console.log("   SMTP_PASS=your-app-password");
+      console.log(`\n RESEND OTP:`);
       console.log(` New Verification Code: ${otp}`);
       console.log(` Expires in: 10 minutes\n`);
-      req.flash(
-        "success_msg",
-        "New verification code sent! Check console for the code."
-      );
+      return res.json({
+        success: true,
+        message: "New verification code sent! Check console for the code.",
+      });
     } else {
       // Send new verification email
       const mailOptions = {
-        from: process.env.MAILTRAP_USER || process.env.EMAIL_USER,
+        from: process.env.SMTP_USER || process.env.EMAIL_USER,
         to: email,
         subject: "Email Verification Code - CRUD App",
         html: `
@@ -430,21 +460,24 @@ exports.resendOtp = async (req, res) => {
       try {
         await transporter.sendMail(mailOptions);
         console.log(" Resend OTP email sent successfully");
-        req.flash("success_msg", "New verification code sent to your email!");
+        res.json({
+          success: true,
+          message: "New verification code sent to your email!",
+        });
       } catch (emailError) {
         console.error(" Email sending failed:", emailError);
-        req.flash(
-          "error_msg",
-          "Failed to send verification email. Please try again later."
-        );
-        return res.redirect("/auth/verify-email");
+        res.status(500).json({
+          success: false,
+          error: "Failed to send verification email. Please try again later.",
+        });
       }
     }
-    res.redirect("/auth/verify-email");
   } catch (error) {
     console.error("Resend OTP error:", error);
-    req.flash("error_msg", "Server error while sending verification code");
-    res.redirect("/auth/verify-email");
+    res.status(500).json({
+      success: false,
+      error: "Server error while sending verification code",
+    });
   }
 };
 
@@ -452,22 +485,26 @@ exports.resendOtp = async (req, res) => {
 exports.resetPassword = async (req, res) => {
   try {
     const { token, password, confirmPassword } = req.body;
-    console.log("Reset password request received");
-
     // Validate input
     if (!token) {
-      req.flash("error_msg", "Reset token is missing");
-      return res.redirect("/auth/forgot-password");
+      return res.status(400).json({
+        success: false,
+        error: "Reset token is missing",
+      });
     }
 
     if (!password || password.length < 6) {
-      req.flash("error_msg", "Password must be at least 6 characters long");
-      return res.redirect(`/auth/reset-password/${token}`);
+      return res.status(400).json({
+        success: false,
+        error: "Password must be at least 6 characters long",
+      });
     }
 
     if (password !== confirmPassword) {
-      req.flash("error_msg", "Passwords do not match");
-      return res.redirect(`/auth/reset-password/${token}`);
+      return res.status(400).json({
+        success: false,
+        error: "Passwords do not match",
+      });
     }
 
     // Hash token
@@ -476,41 +513,34 @@ exports.resetPassword = async (req, res) => {
       .update(token)
       .digest("hex");
 
-    console.log("Looking for user with reset token...");
     const user = await User.findOne({
       resetPasswordToken,
       resetPasswordExpires: { $gt: Date.now() },
     });
 
     if (!user) {
-      console.log("No user found with valid reset token");
-      req.flash(
-        "error_msg",
-        "Invalid or expired reset token. Please request a new password reset."
-      );
-      return res.redirect("/auth/forgot-password");
+      return res.status(400).json({
+        success: false,
+        error:
+          "Invalid or expired reset token. Please request a new password reset.",
+      });
     }
-
-    console.log("User found, updating password for:", user.email);
 
     // Update password and clear reset token
     user.password = password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
     await user.save();
-
-    console.log("Password updated successfully");
-    req.flash(
-      "success_msg",
-      "Password has been reset successfully! You can now sign in with your new password."
-    );
-    res.redirect("/auth/signin");
+    res.json({
+      success: true,
+      message:
+        "Password has been reset successfully! You can now sign in with your new password.",
+    });
   } catch (error) {
     console.error(" Reset password error:", error);
-    req.flash(
-      "error_msg",
-      "Server error during password reset. Please try again."
-    );
-    res.redirect("/auth/forgot-password");
+    res.status(500).json({
+      success: false,
+      error: "Server error during password reset. Please try again.",
+    });
   }
 };

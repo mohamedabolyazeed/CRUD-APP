@@ -48,45 +48,11 @@ const validateResetPassword = [
 
 // Authentication Routes
 
-// GET: Sign In page
-router.get("/signin", (req, res) => {
-  res.render("auth/signin", {
-    success_msg: req.flash("success_msg"),
-    error_msg: req.flash("error_msg"),
-    errors: {},
-  });
-});
-
 // POST: Sign In
 router.post("/signin", validateSignin, authController.signin);
 
-// GET: Sign Up page
-router.get("/signup", (req, res) => {
-  res.render("auth/signup", {
-    success_msg: req.flash("success_msg"),
-    error_msg: req.flash("error_msg"),
-    errors: {},
-  });
-});
-
 // POST: Sign Up
 router.post("/signup", validateSignup, authController.signup);
-
-// GET: Verify Email page
-router.get("/verify-email", (req, res) => {
-  if (!req.session.pendingVerification) {
-    req.flash("error_msg", "No pending verification found");
-    return res.redirect("/auth/signup");
-  }
-
-  res.render("auth/verify-email", {
-    email: req.session.pendingVerification.email,
-    token: req.session.pendingVerification.token,
-    success_msg: req.flash("success_msg"),
-    error_msg: req.flash("error_msg"),
-    errors: {},
-  });
-});
 
 // POST: Verify Email
 router.post(
@@ -104,31 +70,12 @@ router.post(
 // POST: Resend OTP
 router.post("/resend-otp", authController.resendOtp);
 
-// GET: Forgot Password page
-router.get("/forgot-password", (req, res) => {
-  res.render("auth/forgot-password", {
-    success_msg: req.flash("success_msg"),
-    error_msg: req.flash("error_msg"),
-    errors: {},
-  });
-});
-
 // POST: Forgot Password
 router.post(
   "/forgot-password",
   validateForgotPassword,
   authController.forgotPassword
 );
-
-// GET: Reset Password page
-router.get("/reset-password/:token", (req, res) => {
-  res.render("auth/reset-password", {
-    token: req.params.token,
-    success_msg: req.flash("success_msg"),
-    error_msg: req.flash("error_msg"),
-    errors: {},
-  });
-});
 
 // POST: Reset Password
 router.post(

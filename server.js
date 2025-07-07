@@ -5,6 +5,7 @@ const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const session = require("express-session");
 const flash = require("connect-flash");
+const cors = require("cors");
 
 // Import modules
 const { connectDB } = require("./server/config/connection");
@@ -18,18 +19,22 @@ const {
 const routes = require("./server/routes");
 
 const app = express();
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 5050;
 
-// View Engine Setup
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "client/views"));
+// CORS setup for development
+app.use(
+  cors({
+    origin:
+      process.env.NODE_ENV === "production" ? false : ["http://localhost:3000"],
+    credentials: true,
+  })
+);
 
 // Middleware
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(express.static(path.join(__dirname, "client/public")));
 
 // Session and Flash
 app.use(
@@ -43,13 +48,26 @@ app.use(
 app.use(flash());
 
 // Development setup (LiveReload)
-setupLiveReload(app, path);
+if (process.env.NODE_ENV !== "production") {
+  setupLiveReload(app, path);
+}
 
 // Database Connection
 connectDB();
 
-// Mount all routes
-app.use("/", routes);
+// API Routes (before React app)
+app.use("/api", routes);
+
+// Serve static files from React build folder
+app.use(express.static(path.join(__dirname, "client/build")));
+
+// Serve React app for all non-API routes
+app.get("*", (req, res) => {
+  if (req.path.startsWith("/api")) return res.status(404).end();
+  // If the request is for a static file that doesn't exist, return 404
+  if (req.path.match(/^\/static\//)) return res.status(404).end();
+  res.sendFile(path.join(__dirname, "client/build", "index.html"));
+});
 
 // Error handling middleware
 app.use(notFoundHandler);
@@ -60,13 +78,11 @@ app.use(globalErrorHandler);
 // Start the server
 app.listen(port, () => {
   console.log(`🚀 Server running at http://localhost:${port}/`);
-  console.log(`📁 Client files served from: client/`);
+  console.log(`📁 React app served from: client/build/`);
   console.log(`⚙️  Server files located in: server/`);
+  console.log(`🔧 API endpoints available at: http://localhost:${port}/api/`);
   console.log(
     "IMPORTANT: If you made changes, ensure you have STOPPED any old server instance (Ctrl+C) and RESTARTED this one."
-  );
-  console.log(
-    "Check terminal logs for messages starting with 'GET /edit/...' or 'POST /delete...' when you click the buttons."
   );
 });
 

@@ -11,16 +11,21 @@ router.use("/auth", authRouter);
 router.use("/admin", adminRouter);
 
 // Mount data routes (protected by auth middleware)
-router.use("/", dataRouter);
+router.use("/data", dataRouter);
 
-// Redirects for convenience
-router.get("/signin", (req, res) => res.redirect("/auth/signin"));
-router.get("/signup", (req, res) => res.redirect("/auth/signup"));
-router.get("/forgot-password", (req, res) =>
-  res.redirect("/auth/forgot-password")
-);
-router.get("/reset-password/:token", (req, res) =>
-  res.redirect(`/auth/reset-password/${req.params.token}`)
-);
+// Auth status check endpoint
+router.get("/auth/me", (req, res) => {
+  if (req.session.user) {
+    res.json({
+      user: req.session.user,
+      authenticated: true,
+    });
+  } else {
+    res.status(401).json({
+      user: null,
+      authenticated: false,
+    });
+  }
+});
 
 module.exports = router;

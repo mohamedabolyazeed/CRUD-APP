@@ -24,10 +24,6 @@ const createAdminUser = async () => {
     const existingAdmin = await User.findOne({ email: adminData.email });
     if (existingAdmin) {
       console.log("Admin user already exists!");
-      console.log("Email:", existingAdmin.email);
-      console.log("Role:", existingAdmin.role);
-      console.log("Active:", existingAdmin.isActive);
-      console.log("Email Verified:", existingAdmin.isEmailVerified);
       return;
     }
 
@@ -36,11 +32,6 @@ const createAdminUser = async () => {
     await adminUser.save();
 
     console.log("Admin user created successfully!");
-    console.log("Email:", adminData.email);
-    console.log("Password:", adminData.password);
-    console.log("Role: Admin");
-    console.log("Email Verified: Yes");
-    console.log("Active: Yes");
     console.log("\n You can now login at: http://localhost:3000/auth/signin");
     console.log("Admin panel: http://localhost:3000/admin");
   } catch (error) {

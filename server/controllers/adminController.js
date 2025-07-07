@@ -1,8 +1,8 @@
 const User = require("../models/User");
 const Data = require("../models/Data");
 
-// Admin Dashboard
-exports.dashboard = async (req, res) => {
+// Admin Dashboard API
+exports.getDashboardAPI = async (req, res) => {
   try {
     // Get statistics
     const totalUsers = await User.countDocuments();
@@ -22,26 +22,30 @@ exports.dashboard = async (req, res) => {
       .limit(10)
       .populate("user", "name email");
 
-    res.render("admin/dashboard", {
-      user: req.adminUser,
-      stats: {
-        totalUsers,
-        activeUsers,
-        verifiedUsers,
-        totalData,
+    res.json({
+      success: true,
+      data: {
+        stats: {
+          totalUsers,
+          activeUsers,
+          verifiedUsers,
+          totalData,
+        },
+        recentUsers,
+        recentData,
       },
-      recentUsers,
-      recentData,
     });
   } catch (error) {
     console.error("Admin dashboard error:", error);
-    req.flash("error_msg", "Error loading admin dashboard");
-    res.redirect("/");
+    res.status(500).json({
+      success: false,
+      error: "Error loading admin dashboard",
+    });
   }
 };
 
-// User Management
-exports.getAllUsers = async (req, res) => {
+// Get All Users API
+exports.getUsersAPI = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -58,104 +62,139 @@ exports.getAllUsers = async (req, res) => {
     const totalUsers = await User.countDocuments();
     const totalPages = Math.ceil(totalUsers / limit);
 
-    res.render("admin/users", {
-      user: req.adminUser,
-      users,
-      pagination: {
-        page,
-        limit,
-        totalUsers,
-        totalPages,
+    res.json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          page,
+          limit,
+          totalUsers,
+          totalPages,
+        },
       },
     });
   } catch (error) {
     console.error("Get users error:", error);
-    req.flash("error_msg", "Error loading users");
-    res.redirect("/admin");
+    res.status(500).json({
+      success: false,
+      error: "Error loading users",
+    });
   }
 };
 
-// Update User Role
-exports.updateUserRole = async (req, res) => {
+// Update User Role API
+exports.updateUserRoleAPI = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
     const { role } = req.body;
 
     if (!["user", "admin"].includes(role)) {
-      return res.status(400).json({ error: "Invalid role" });
+      return res.status(400).json({
+        success: false,
+        error: "Invalid role",
+      });
     }
 
     // Prevent admin from removing their own admin role
-    if (userId === req.adminUser._id.toString() && role === "user") {
-      return res
-        .status(400)
-        .json({ error: "Cannot remove your own admin role" });
+    if (id === req.session.user._id && role === "user") {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot remove your own admin role",
+      });
     }
 
     const user = await User.findByIdAndUpdate(
-      userId,
+      id,
       { role },
       { new: true }
     ).select("-password");
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
     }
 
-    res.json({ success: true, user });
+    res.json({
+      success: true,
+      message: "User role updated successfully",
+      data: user,
+    });
   } catch (error) {
     console.error("Update user role error:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
   }
 };
 
-// Toggle User Status
-exports.toggleUserStatus = async (req, res) => {
+// Update User Status API
+exports.updateUserStatusAPI = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
     const { isActive } = req.body;
 
     // Prevent admin from deactivating their own account
-    if (userId === req.adminUser._id.toString() && !isActive) {
-      return res
-        .status(400)
-        .json({ error: "Cannot deactivate your own account" });
+    if (id === req.session.user._id && !isActive) {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot deactivate your own account",
+      });
     }
 
     const user = await User.findByIdAndUpdate(
-      userId,
+      id,
       { isActive },
       { new: true }
     ).select("-password");
 
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
     }
 
-    res.json({ success: true, user });
+    res.json({
+      success: true,
+      message: "User status updated successfully",
+      data: user,
+    });
   } catch (error) {
-    console.error("Toggle user status error:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Update user status error:", error);
+    res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
   }
 };
 
-// Delete User
-exports.deleteUser = async (req, res) => {
+// Delete User API
+exports.deleteUserAPI = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
     // Prevent admin from deleting their own account
-    if (userId === req.adminUser._id.toString()) {
-      return res.status(400).json({ error: "Cannot delete your own account" });
+    if (id === req.session.user._id) {
+      return res.status(400).json({
+        success: false,
+        error: "Cannot delete your own account",
+      });
     }
 
-    const user = await User.findByIdAndDelete(userId);
+    const user = await User.findByIdAndDelete(id);
     if (!user) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({
+        success: false,
+        error: "User not found",
+      });
     }
 
     // Also delete user's data
-    await Data.deleteMany({ user: userId });
+    await Data.deleteMany({ user: id });
 
     res.json({
       success: true,
@@ -163,7 +202,10 @@ exports.deleteUser = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete user error:", error);
-    res.status(500).json({ error: "Server error" });
+    res.status(500).json({
+      success: false,
+      error: "Server error",
+    });
   }
 };
 
