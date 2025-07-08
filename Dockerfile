@@ -1,32 +1,52 @@
-# Use Node.js 18 Alpine for smaller image size
+# Multi-stage build for production
+FROM node:18-alpine AS builder
+
+# Set working directory
+WORKDIR /app
+
+# Copy client package files
+COPY client/package*.json ./client/
+
+# Install client dependencies
+WORKDIR /app/client
+RUN npm ci --only=production
+
+# Copy client source and build
+COPY client/ ./
+RUN npm run build
+
+# Production stage
 FROM node:18-alpine
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy server package files
 COPY package*.json ./
 
-# Install dependencies
+# Install server dependencies
 RUN npm ci --only=production
 
 # Copy server files
 COPY server/ ./server/
 COPY server.js ./
-COPY .env* ./
 
-# Create client build directory
-RUN mkdir -p client/build
+# Copy built React app from builder stage
+COPY --from=builder /app/build ./client/build/
 
-# Copy client build files (will be built in multi-stage or mounted)
-COPY client/build/ ./client/build/
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && adduser -S nodejs -u 1001
 
-# Expose port
-EXPOSE 5000
+# Change ownership of the app directory
+RUN chown -R nodejs:nodejs /app
+USER nodejs
+
+# Expose port (Render will set PORT environment variable)
+EXPOSE $PORT
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:5000/api/auth/me', (res) => { process.exit(res.statusCode === 401 ? 0 : 1) })"
+  CMD node -e "require('http').get('http://localhost:${PORT:-5000}/api/auth/me', (res) => { process.exit(res.statusCode === 401 ? 0 : 1) })"
 
 # Start the application
 CMD ["npm", "start"] 

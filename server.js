@@ -21,11 +21,13 @@ const routes = require("./server/routes");
 const app = express();
 const port = process.env.PORT || 5050;
 
-// CORS setup for development
+// CORS setup for development and production
 app.use(
   cors({
     origin:
-      process.env.NODE_ENV === "production" ? false : ["http://localhost:3000"],
+      process.env.NODE_ENV === "production"
+        ? ["https://crud-app-pax4.vercel.app"]
+        : ["http://localhost:3000"],
     credentials: true,
   })
 );
@@ -75,15 +77,18 @@ app.use(errorHandler);
 app.use(pageNotFound);
 app.use(globalErrorHandler);
 
-// Start the server
-app.listen(port, () => {
-  console.log(`🚀 Server running at http://localhost:${port}/`);
-  console.log(`📁 React app served from: client/build/`);
-  console.log(`⚙️  Server files located in: server/`);
-  console.log(`🔧 API endpoints available at: http://localhost:${port}/api/`);
-  console.log(
-    "IMPORTANT: If you made changes, ensure you have STOPPED any old server instance (Ctrl+C) and RESTARTED this one."
-  );
-});
+// Start the server (only in development)
+if (process.env.NODE_ENV !== "production") {
+  app.listen(port, () => {
+    console.log(`🚀 Server running at http://localhost:${port}/`);
+    console.log(`📁 React app served from: client/build/`);
+    console.log(`⚙️  Server files located in: server/`);
+    console.log(`🔧 API endpoints available at: http://localhost:${port}/api/`);
+    console.log(
+      "IMPORTANT: If you made changes, ensure you have STOPPED any old server instance (Ctrl+C) and RESTARTED this one."
+    );
+  });
+}
 
+// Export for Vercel
 module.exports = app;

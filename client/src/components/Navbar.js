@@ -85,11 +85,24 @@ const Navbar = ({ recordCount = 0 }) => {
             )}
           </div>
 
-          {/* Right side - Record Count and Mobile Menu */}
+          {/* Right side - Record Count, Logout (for regular users), and Mobile Menu */}
           <div className="flex items-center space-x-4">
             <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
               <span className="text-sm text-white">{recordCount} records</span>
             </div>
+
+            {/* Logout button for regular users (desktop) */}
+            {user?.role !== "admin" && (
+              <div className="hidden sm:block">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 px-3 py-2 bg-red-500 rounded-lg text-white hover:bg-red-600 transition-colors"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="text-sm font-medium">Logout</span>
+                </button>
+              </div>
+            )}
 
             {/* Mobile Menu Button */}
             <div className="sm:hidden">
@@ -106,7 +119,7 @@ const Navbar = ({ recordCount = 0 }) => {
         {/* Mobile Dropdown */}
         {isDropdownOpen && (
           <div className="sm:hidden border-t border-white/10 py-2 px-4 space-y-2 bg-white/5 backdrop-blur-sm rounded-b-xl">
-            {user?.role === "admin" && (
+            {user?.role === "admin" ? (
               <>
                 <Link
                   to="/admin"
@@ -143,6 +156,18 @@ const Navbar = ({ recordCount = 0 }) => {
                   <span className="text-sm font-medium">Logout</span>
                 </button>
               </>
+            ) : (
+              // Regular user logout button for mobile
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setIsDropdownOpen(false);
+                }}
+                className="w-full flex items-center space-x-2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="text-sm font-medium">Logout</span>
+              </button>
             )}
           </div>
         )}
