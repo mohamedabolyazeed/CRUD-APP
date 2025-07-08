@@ -25,12 +25,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"bun run server\" \"bun run client\"",
     "server": "nodemon server.js",
-    "client": "cd client && npm start",
-    "build": "cd client && npm run build",
-    "install-client": "cd client && npm install",
-    "heroku-postbuild": "npm run install-client && npm run build",
+    "client": "cd client && bun start",
+    "build": "cd client && bun run build",
+    "install-client": "cd client && bun install",
+    "heroku-postbuild": "bun run install-client && bun run build",
     "test": "echo 'No tests specified'",
     "lint": "echo 'No linting configured'",
     "create-admin": "node server/utils/createAdmin.js"

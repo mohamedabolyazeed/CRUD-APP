@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { Plus, Edit, Trash2, Database } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
 
 const Home = () => {
   const [records, setRecords] = useState([]);
@@ -16,7 +15,6 @@ const Home = () => {
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchRecords();
@@ -32,15 +30,6 @@ const Home = () => {
       setRecords([]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/signin");
-    } catch (error) {
-      toast.error("Error during logout");
     }
   };
 

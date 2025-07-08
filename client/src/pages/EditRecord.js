@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -18,11 +18,7 @@ const EditRecord = () => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchRecord();
-  }, [id]);
-
-  const fetchRecord = async () => {
+  const fetchRecord = useCallback(async () => {
     try {
       const response = await axios.get(`/api/data/${id}`, {
         withCredentials: true,
@@ -41,7 +37,11 @@ const EditRecord = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchRecord();
+  }, [fetchRecord]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

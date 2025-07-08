@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { Users, Crown, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Users, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
@@ -13,13 +12,8 @@ const AdminUsers = () => {
     limit: 10,
   });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchUsers();
-  }, [pagination.page]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await axios.get(
         "/api/admin/api/users?page=" +
@@ -49,7 +43,11 @@ const AdminUsers = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.page, pagination.limit]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const updateUserRole = async (userId, role) => {
     try {

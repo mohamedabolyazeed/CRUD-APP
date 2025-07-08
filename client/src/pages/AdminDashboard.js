@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
   Users,
   Database,
@@ -9,7 +8,6 @@ import {
 } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useAuth } from "../contexts/AuthContext";
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -21,8 +19,6 @@ const AdminDashboard = () => {
   const [recentUsers, setRecentUsers] = useState([]);
   const [recentData, setRecentData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     fetchDashboardData();
@@ -51,14 +47,7 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate("/signin");
-    } catch (error) {
-      toast.error("Error during logout");
-    }
-  };
+
 
   if (loading) {
     return (
