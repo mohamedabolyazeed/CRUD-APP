@@ -26,7 +26,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://crud-app-pax4.vercel.app"]
+        ? ["https://crudmatepanel.vercel.app"]
         : ["http://localhost:3000"],
     credentials: true,
   })
@@ -57,19 +57,41 @@ if (process.env.NODE_ENV !== "production") {
 // Database Connection
 connectDB();
 
-// API Routes (before React app)
+// API Routes
 app.use("/api", routes);
 
-// Serve static files from React build folder
-app.use(express.static(path.join(__dirname, "client/build")));
+// In production (Vercel), only serve API routes
+if (process.env.NODE_ENV === "production") {
+  // Root route for health check
+  app.get("/", (req, res) => {
+    res.json({
+      message: "CRUD App Backend API",
+      status: "running",
+      endpoints: {
+        auth: "/api/auth",
+        data: "/api/data",
+        admin: "/api/admin",
+      },
+    });
+  });
 
-// Serve React app for all non-API routes
-app.get("*", (req, res) => {
-  if (req.path.startsWith("/api")) return res.status(404).end();
-  // If the request is for a static file that doesn't exist, return 404
-  if (req.path.match(/^\/static\//)) return res.status(404).end();
-  res.sendFile(path.join(__dirname, "client/build", "index.html"));
-});
+  // Catch all other routes and return 404 for non-API routes
+  app.get("*", (req, res) => {
+    if (!req.path.startsWith("/api")) {
+      return res.status(404).json({ error: "API endpoint not found" });
+    }
+  });
+} else {
+  // Development: Serve static files from React build folder
+  app.use(express.static(path.join(__dirname, "client/build")));
+
+  // Serve React app for all non-API routes in development
+  app.get("*", (req, res) => {
+    if (req.path.startsWith("/api")) return res.status(404).end();
+    if (req.path.match(/^\/static\//)) return res.status(404).end();
+    res.sendFile(path.join(__dirname, "client/build", "index.html"));
+  });
+}
 
 // Error handling middleware
 app.use(notFoundHandler);
@@ -80,10 +102,10 @@ app.use(globalErrorHandler);
 // Start the server (only in development)
 if (process.env.NODE_ENV !== "production") {
   app.listen(port, () => {
-    console.log(`🚀 Server running at http://localhost:${port}/`);
-    console.log(`📁 React app served from: client/build/`);
-    console.log(`⚙️  Server files located in: server/`);
-    console.log(`🔧 API endpoints available at: http://localhost:${port}/api/`);
+    console.log(` Server running at http://localhost:${port}/`);
+    console.log(` React app served from: client/build/`);
+    console.log(`  Server files located in: server/`);
+    console.log(` API endpoints available at: http://localhost:${port}/api/`);
     console.log(
       "IMPORTANT: If you made changes, ensure you have STOPPED any old server instance (Ctrl+C) and RESTARTED this one."
     );
