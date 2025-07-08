@@ -26,7 +26,7 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === "production"
-        ? ["https://crudmatepanel.vercel.app"]
+        ? ["https://crudmatepanel.vercel.app/"]
         : ["http://localhost:3000"],
     credentials: true,
   })
