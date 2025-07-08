@@ -27,7 +27,7 @@ const EditRecord = () => {
       const response = await axios.get(`/api/data/${id}`, {
         withCredentials: true,
       });
-      const recordData = response.data.record;
+      const recordData = response.data.data;
       setRecord(recordData);
       setFormData({
         username: recordData.username || "",
