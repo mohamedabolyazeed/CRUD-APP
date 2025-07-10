@@ -10,11 +10,12 @@
   }
 
   body {
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: "Inter", "Segoe UI", system-ui, sans-serif;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(to bottom, #0f172a, #1e293b);
     position: relative;
     overflow-x: hidden;
+    @apply text-dark-100;
   }
 
   /* Animated Background Elements */
@@ -25,32 +26,37 @@
     width: 300px;
     height: 300px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    animation: float 6s ease-in-out infinite;
+    background: linear-gradient(
+      45deg,
+      rgba(99, 102, 241, 0.05),
+      rgba(217, 70, 239, 0.05)
+    );
+    animation: float 10s ease-in-out infinite;
     z-index: -1;
+    filter: blur(50px);
   }
 
   body::before {
-    top: 10%;
-    left: 10%;
+    top: -100px;
+    left: -100px;
     animation-delay: 0s;
   }
 
   body::after {
-    bottom: 10%;
-    right: 10%;
-    animation-delay: 3s;
+    bottom: -100px;
+    right: -100px;
+    animation-delay: 5s;
   }
 
   @keyframes float {
     0%,
     100% {
-      transform: translateY(0px) rotate(0deg);
-      opacity: 0.3;
+      transform: translateY(0px) scale(1);
+      opacity: 0.05;
     }
     50% {
-      transform: translateY(-20px) rotate(180deg);
-      opacity: 0.6;
+      transform: translateY(-50px) scale(1.1);
+      opacity: 0.1;
     }
   }
 }
@@ -61,23 +67,23 @@
   }
 
   .btn-primary {
-    @apply bg-gradient-to-r from-primary-500 to-secondary-500 text-white shadow-lg hover:shadow-xl hover:-translate-y-1;
+    @apply bg-gradient-to-r from-primary-600 to-accent-600 text-white shadow-lg hover:shadow-xl hover:-translate-y-1;
   }
 
   .btn-primary:hover {
-    @apply bg-gradient-to-r from-primary-600 to-secondary-600;
+    @apply bg-gradient-to-r from-primary-700 to-accent-700;
   }
 
   .form-input {
-    @apply w-full px-5 py-4 border-2 border-gray-200 rounded-xl text-base transition-all duration-300 bg-white/90 text-gray-800;
+    @apply w-full px-5 py-4 rounded-xl text-base transition-all duration-300 bg-dark-800/80 text-dark-100 border border-dark-700/50 focus:border-primary-500/50;
   }
 
   .form-input:focus {
-    @apply outline-none border-primary-500 shadow-lg -translate-y-1;
+    @apply outline-none ring-2 ring-primary-500/20 shadow-lg shadow-primary-500/10 border-primary-500/50;
   }
 
   .form-label {
-    @apply block mb-2 text-gray-700 font-semibold text-sm transition-colors duration-300;
+    @apply block mb-2 text-dark-300 font-medium text-sm transition-colors duration-300;
   }
 
   .alert {
@@ -85,24 +91,24 @@
   }
 
   .alert-success {
-    @apply bg-gradient-to-r from-green-400/90 to-green-500/90 text-white shadow-lg;
+    @apply bg-gradient-to-r from-green-600/20 to-green-700/20 text-green-200 shadow-lg border border-green-500/20;
   }
 
   .alert-danger {
-    @apply bg-gradient-to-r from-red-400/90 to-red-500/90 text-white shadow-lg;
+    @apply bg-gradient-to-r from-red-600/20 to-red-700/20 text-red-200 shadow-lg border border-red-500/20;
   }
 
   .card {
-    @apply bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 relative overflow-hidden;
+    @apply bg-dark-800/80 backdrop-blur-xl rounded-3xl shadow-xl border border-dark-700/50 relative overflow-hidden animate-fade-in;
   }
 
   .card::before {
     content: "";
-    @apply absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-500 via-secondary-500 to-primary-600 bg-[length:300%_100%] animate-gradient;
+    @apply absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-primary-500/50 via-accent-500/50 to-primary-600/50 bg-[length:200%_100%] animate-gradient;
   }
 
   .table-container {
-    @apply w-full overflow-x-auto rounded-2xl bg-white/50 backdrop-blur-sm shadow-lg;
+    @apply w-full overflow-x-auto rounded-2xl bg-dark-800/50 backdrop-blur-sm shadow-xl border border-dark-700/50;
   }
 
   .data-table {
@@ -110,11 +116,11 @@
   }
 
   .data-table th {
-    @apply bg-gradient-to-r from-green-500 to-green-600 text-white p-4 text-left font-semibold text-sm uppercase tracking-wider;
+    @apply bg-dark-800/80 text-dark-200 p-4 text-left font-semibold text-sm uppercase tracking-wider border-b border-dark-700/50;
   }
 
   .data-table td {
-    @apply p-4 border-b border-gray-200/50 text-gray-800 align-middle bg-white/30 transition-all duration-300;
+    @apply p-4 border-b border-dark-700/50 text-dark-200 align-middle bg-dark-800/30 transition-all duration-300;
   }
 
   .data-table tr:last-child td {
@@ -122,33 +128,57 @@
   }
 
   .data-table tr:hover td {
-    @apply bg-white/60 scale-105;
+    @apply bg-dark-700/40 scale-[1.02];
   }
 
   .action-button {
-    @apply px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-300 border-none cursor-pointer mx-1 uppercase tracking-wider;
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-xl font-medium text-sm transition-all duration-300 transform hover:scale-105 hover:-translate-y-1;
   }
 
   .action-button.edit {
-    @apply bg-gradient-to-r from-green-500 to-green-600 text-white;
+    @apply bg-gradient-to-br from-primary-600/20 to-primary-800/20 text-primary-400 border border-primary-500/20 shadow-lg hover:shadow-primary-500/10;
+  }
+
+  .action-button.edit:hover {
+    @apply bg-gradient-to-br from-primary-500/30 to-primary-700/30 text-primary-300;
   }
 
   .action-button.delete {
-    @apply bg-gradient-to-r from-red-500 to-red-600 text-white;
+    @apply bg-gradient-to-br from-red-600/20 to-red-800/20 text-red-400 border border-red-500/20 shadow-lg hover:shadow-red-500/10;
   }
 
-  .action-button:hover {
-    @apply -translate-y-1 shadow-lg;
+  .action-button.delete:hover {
+    @apply bg-gradient-to-br from-red-500/30 to-red-700/30 text-red-300;
+  }
+
+  .status-badge {
+    @apply px-3 py-1.5 rounded-xl text-xs font-medium inline-flex items-center gap-1.5 transition-all duration-300 shadow-lg backdrop-blur-sm;
+  }
+
+  .status-badge.active {
+    @apply bg-gradient-to-br from-green-600/20 to-green-800/20 text-green-300 border border-green-500/20 shadow-green-500/10;
+  }
+
+  .status-badge.inactive {
+    @apply bg-gradient-to-br from-red-600/20 to-red-800/20 text-red-300 border border-red-500/20 shadow-red-500/10;
+  }
+
+  .status-badge.admin {
+    @apply bg-gradient-to-br from-primary-600/20 to-primary-800/20 text-primary-300 border border-primary-500/20 shadow-primary-500/10;
+  }
+
+  .status-badge.user {
+    @apply bg-gradient-to-br from-dark-700/50 to-dark-800/50 text-dark-300 border border-dark-600/20 shadow-dark-600/10;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-gradient-to-r from-primary-500 to-secondary-500 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary-400 to-accent-400 bg-clip-text text-transparent;
   }
 
   .glass-effect {
-    @apply bg-white/95 backdrop-blur-xl border border-white/20;
+    @apply bg-dark-800/80 backdrop-blur-xl border border-dark-700/50;
   }
 
   .animate-slide-in-left {

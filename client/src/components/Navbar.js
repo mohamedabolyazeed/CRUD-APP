@@ -1,12 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import {
-  LogOut,
-  Crown,
-  Menu,
-  Users,
-  Database,
-} from "lucide-react";
+import { LogOut, Crown, Menu, Users, Database } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import toast from "react-hot-toast";
 
@@ -26,22 +20,20 @@ const Navbar = ({ recordCount = 0 }) => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 sticky top-0 z-50">
+    <nav className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 sticky top-0 z-50 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="flex justify-between items-center h-16">
           {/* Left side - Logo and User Info */}
           <div className="flex items-center">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform">
-                <span className="text-xl font-bold bg-gradient-to-r from-indigo-500 to-pink-500 text-transparent bg-clip-text">
+              <div className="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform border border-gray-700">
+                <span className="text-xl font-bold bg-gradient-to-r from-primary-400 to-secondary-400 text-transparent bg-clip-text">
                   {user?.name?.charAt(0) || "A"}
                 </span>
               </div>
               <div className="hidden sm:block">
-                <div className="text-white font-semibold">Welcome back,</div>
-                <div className="text-indigo-100">
-                  {user?.name || "Guest"} 👋
-                </div>
+                <div className="text-gray-200 font-semibold">Welcome back,</div>
+                <div className="text-gray-400">{user?.name || "Guest"} 👋</div>
               </div>
             </div>
           </div>
@@ -52,28 +44,28 @@ const Navbar = ({ recordCount = 0 }) => {
               <>
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 rounded-lg text-gray-200 hover:bg-gray-700/50 transition-colors backdrop-blur-sm"
                 >
                   <Crown className="w-4 h-4" />
                   <span className="text-sm font-medium">Admin Dashboard</span>
                 </Link>
                 <Link
                   to="/admin/users"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 rounded-lg text-gray-200 hover:bg-gray-700/50 transition-colors backdrop-blur-sm"
                 >
                   <Users className="w-4 h-4" />
                   <span className="text-sm font-medium">Manage Users</span>
                 </Link>
                 <Link
                   to="/"
-                  className="flex items-center space-x-2 px-4 py-2 bg-white/10 rounded-lg text-white hover:bg-white/20 transition-colors backdrop-blur-sm"
+                  className="flex items-center space-x-2 px-4 py-2 bg-gray-800/50 rounded-lg text-gray-200 hover:bg-gray-700/50 transition-colors backdrop-blur-sm"
                 >
                   <Database className="w-4 h-4" />
                   <span className="text-sm font-medium">Records Dashboard</span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 bg-red-500 rounded-lg text-white hover:bg-red-600 transition-colors"
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-900/80 rounded-lg text-gray-200 hover:bg-red-800/80 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Logout</span>
@@ -84,8 +76,10 @@ const Navbar = ({ recordCount = 0 }) => {
 
           {/* Right side - Record Count, Logout (for regular users), and Mobile Menu */}
           <div className="flex items-center space-x-4">
-            <div className="px-3 py-1 bg-white/10 rounded-full backdrop-blur-sm">
-              <span className="text-sm text-white">{recordCount} records</span>
+            <div className="px-3 py-1 bg-gray-800/50 rounded-full backdrop-blur-sm">
+              <span className="text-sm text-gray-200">
+                {recordCount} records
+              </span>
             </div>
 
             {/* Logout button for regular users (desktop) */}
@@ -93,7 +87,7 @@ const Navbar = ({ recordCount = 0 }) => {
               <div className="hidden sm:block">
                 <button
                   onClick={handleLogout}
-                  className="flex items-center space-x-2 px-3 py-2 bg-red-500 rounded-lg text-white hover:bg-red-600 transition-colors"
+                  className="flex items-center space-x-2 px-3 py-2 bg-red-900/80 rounded-lg text-gray-200 hover:bg-red-800/80 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Logout</span>
@@ -105,7 +99,7 @@ const Navbar = ({ recordCount = 0 }) => {
             <div className="sm:hidden">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="p-2 text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-gray-200 hover:bg-gray-800/50 rounded-lg transition-colors"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -115,12 +109,12 @@ const Navbar = ({ recordCount = 0 }) => {
 
         {/* Mobile Dropdown */}
         {isDropdownOpen && (
-          <div className="sm:hidden border-t border-white/10 py-2 px-4 space-y-2 bg-white/5 backdrop-blur-sm rounded-b-xl">
+          <div className="sm:hidden border-t border-gray-700 py-2 px-4 space-y-2 bg-gray-800/90 backdrop-blur-sm rounded-b-xl">
             {user?.role === "admin" ? (
               <>
                 <Link
                   to="/admin"
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 text-white"
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700/50 text-gray-200"
                   onClick={() => setIsDropdownOpen(false)}
                 >
                   <Crown className="w-4 h-4" />
@@ -128,7 +122,7 @@ const Navbar = ({ recordCount = 0 }) => {
                 </Link>
                 <Link
                   to="/admin/users"
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 text-white"
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700/50 text-gray-200"
                   onClick={() => setIsDropdownOpen(false)}
                 >
                   <Users className="w-4 h-4" />
@@ -136,7 +130,7 @@ const Navbar = ({ recordCount = 0 }) => {
                 </Link>
                 <Link
                   to="/"
-                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-white/10 text-white"
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-700/50 text-gray-200"
                   onClick={() => setIsDropdownOpen(false)}
                 >
                   <Database className="w-4 h-4" />
@@ -147,7 +141,7 @@ const Navbar = ({ recordCount = 0 }) => {
                     handleLogout();
                     setIsDropdownOpen(false);
                   }}
-                  className="w-full flex items-center space-x-2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+                  className="w-full flex items-center space-x-2 p-2 rounded-lg bg-red-900/80 hover:bg-red-800/80 text-gray-200 transition-colors"
                 >
                   <LogOut className="w-4 h-4" />
                   <span className="text-sm font-medium">Logout</span>
@@ -160,7 +154,7 @@ const Navbar = ({ recordCount = 0 }) => {
                   handleLogout();
                   setIsDropdownOpen(false);
                 }}
-                className="w-full flex items-center space-x-2 p-2 rounded-lg bg-red-500 hover:bg-red-600 text-white transition-colors"
+                className="w-full flex items-center space-x-2 p-2 rounded-lg bg-red-900/80 hover:bg-red-800/80 text-gray-200 transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 <span className="text-sm font-medium">Logout</span>

@@ -106,24 +106,25 @@ const AdminUsers = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 sm:p-8 rounded-xl mb-6 sm:mb-8">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="card p-6 sm:p-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
-            <Users className="w-7 h-7 sm:w-8 sm:h-8" /> Manage Users
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-gradient">
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 text-primary-400" /> Manage
+            Users
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-white/90">
+          <p className="mt-2 text-sm sm:text-base text-dark-400">
             Total Users: {pagination?.totalUsers ?? 0} | Page{" "}
             {pagination?.page ?? 1} of {pagination?.totalPages ?? 1}
           </p>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <div className="inline-block min-w-full align-middle">
-            <div className="bg-gray-50 p-4 border-b">
-              <div className="grid grid-cols-6 gap-4 font-semibold text-gray-700 text-sm">
+            <div className="p-6 border-b border-dark-700/50">
+              <div className="grid grid-cols-6 gap-4 font-semibold text-dark-200 text-sm">
                 <div>Name</div>
                 <div>Email</div>
                 <div>Role</div>
@@ -134,31 +135,29 @@ const AdminUsers = () => {
             </div>
 
             {users.length > 0 ? (
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-dark-700/50">
                 {users.map((user) => (
                   <div
                     key={user._id}
-                    className="grid grid-cols-6 gap-4 p-4 hover:bg-gray-50 transition-colors items-center text-sm"
+                    className="grid grid-cols-6 gap-4 p-6 hover:bg-dark-800/50 transition-all items-center text-sm"
                   >
                     <div className="min-w-0">
-                      <div className="font-semibold text-gray-900 truncate">
+                      <div className="font-medium text-dark-200 truncate">
                         {user.name}
                       </div>
-                      <div className="text-xs text-gray-500 truncate">
+                      <div className="text-xs text-dark-400 truncate">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </div>
                     </div>
-                    <div className="text-gray-600 truncate">{user.email}</div>
+                    <div className="text-dark-300 truncate">{user.email}</div>
                     <div>
                       <select
                         value={user.role}
                         onChange={(e) =>
                           updateUserRole(user._id, e.target.value)
                         }
-                        className={`w-full px-2 py-1 rounded-full text-xs font-medium border-0 ${
-                          user.role === "admin"
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-gray-100 text-gray-700"
+                        className={`status-badge w-full ${
+                          user.role === "admin" ? "admin" : "user"
                         }`}
                       >
                         <option value="user">User</option>
@@ -171,10 +170,8 @@ const AdminUsers = () => {
                         onChange={(e) =>
                           updateUserStatus(user._id, e.target.value === "true")
                         }
-                        className={`w-full px-2 py-1 rounded-full text-xs font-medium border-0 ${
-                          user.isActive
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
+                        className={`status-badge w-full ${
+                          user.isActive ? "active" : "inactive"
                         }`}
                       >
                         <option value="true">Active</option>
@@ -183,10 +180,8 @@ const AdminUsers = () => {
                     </div>
                     <div>
                       <span
-                        className={`inline-block px-2 py-1 rounded-full text-xs font-medium ${
-                          user.isEmailVerified
-                            ? "bg-green-100 text-green-700"
-                            : "bg-yellow-100 text-yellow-700"
+                        className={`status-badge ${
+                          user.isEmailVerified ? "active" : "inactive"
                         }`}
                       >
                         {user.isEmailVerified ? "Yes" : "No"}
@@ -195,17 +190,18 @@ const AdminUsers = () => {
                     <div className="text-right">
                       <button
                         onClick={() => deleteUser(user._id)}
-                        className="text-red-500 hover:text-red-700 transition-colors p-1"
+                        className="action-button delete"
                         title="Delete user"
                       >
                         <Trash2 className="w-4 h-4" />
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500 text-sm">
+              <div className="p-8 text-center text-dark-400">
                 No users found.
               </div>
             )}
@@ -214,40 +210,44 @@ const AdminUsers = () => {
       </div>
 
       {pagination?.totalPages > 1 && (
-        <div className="flex flex-wrap justify-center gap-2 mt-6">
+        <div className="flex flex-wrap justify-center gap-2">
           {pagination?.page > 1 && (
-            <a
-              href={`/admin/users?page=${pagination.page - 1}`}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+            <button
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page - 1 }))
+              }
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-dark-800 text-dark-200 hover:bg-dark-700 transition-all border border-dark-700/50"
             >
-              <ChevronLeft className="w-4 h-4" />
-            </a>
+              <ChevronLeft className="w-5 h-5" />
+            </button>
           )}
 
           {Array.from(
             { length: pagination?.totalPages ?? 1 },
             (_, i) => i + 1
           ).map((page) => (
-            <a
+            <button
               key={page}
-              href={`/admin/users?page=${page}`}
-              className={`inline-flex items-center justify-center w-8 h-8 text-sm font-medium rounded-lg transition-colors ${
+              onClick={() => setPagination((prev) => ({ ...prev, page }))}
+              className={`inline-flex items-center justify-center w-10 h-10 text-sm font-medium rounded-xl transition-all border border-dark-700/50 ${
                 page === pagination?.page
-                  ? "bg-primary-600 text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-dark-700 text-dark-100"
+                  : "bg-dark-800 text-dark-400 hover:bg-dark-700"
               }`}
             >
               {page}
-            </a>
+            </button>
           ))}
 
           {pagination?.page < pagination?.totalPages && (
-            <a
-              href={`/admin/users?page=${pagination.page + 1}`}
-              className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-500 text-white hover:bg-primary-600 transition-colors"
+            <button
+              onClick={() =>
+                setPagination((prev) => ({ ...prev, page: prev.page + 1 }))
+              }
+              className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-dark-800 text-dark-200 hover:bg-dark-700 transition-all border border-dark-700/50"
             >
-              <ChevronRight className="w-4 h-4" />
-            </a>
+              <ChevronRight className="w-5 h-5" />
+            </button>
           )}
         </div>
       )}

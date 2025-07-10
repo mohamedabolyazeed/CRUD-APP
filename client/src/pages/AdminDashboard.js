@@ -47,8 +47,6 @@ const AdminDashboard = () => {
     }
   };
 
-
-
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -58,78 +56,75 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-4 sm:p-6">
-      <div className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 p-6 sm:p-8 rounded-xl mb-6 sm:mb-8">
+    <div className="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+      <div className="card p-6 sm:p-8">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-white">
-            <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8" /> Admin Dashboard
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 text-gradient">
+            <BarChart3 className="w-7 h-7 sm:w-8 sm:h-8 text-primary-400" />{" "}
+            Admin Dashboard
           </h1>
-          <p className="mt-2 text-sm sm:text-base text-white/90">
+          <p className="mt-2 text-sm sm:text-base text-dark-400">
             Total Users: {stats.totalUsers} | {stats.totalData} records
           </p>
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="card p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary-900/30 rounded-xl">
+              <Users className="h-6 w-6 sm:h-7 sm:w-7 text-primary-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">
-                Total Users
-              </p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div>
+              <p className="text-sm font-medium text-dark-400">Total Users</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gradient">
                 {stats.totalUsers}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-green-100 rounded-lg">
-              <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
+        <div className="card p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-green-900/30 rounded-xl">
+              <Activity className="h-6 w-6 sm:h-7 sm:w-7 text-green-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">
-                Active Users
-              </p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+            <div>
+              <p className="text-sm font-medium text-dark-400">Active Users</p>
+              <p className="text-2xl sm:text-3xl font-bold text-gradient">
                 {stats.activeUsers}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-purple-100 rounded-lg">
-              <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
+        <div className="card p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-accent-900/30 rounded-xl">
+              <CheckCircle className="h-6 w-6 sm:h-7 sm:w-7 text-accent-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">
+            <div>
+              <p className="text-sm font-medium text-dark-400">
                 Verified Users
               </p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-2xl sm:text-3xl font-bold text-gradient">
                 {stats.verifiedUsers}
               </p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border p-4 sm:p-6">
-          <div className="flex items-center">
-            <div className="p-2 bg-indigo-100 rounded-lg">
-              <Database className="h-5 w-5 sm:h-6 sm:w-6 text-indigo-600" />
+        <div className="card p-6">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-primary-900/30 rounded-xl">
+              <Database className="h-6 w-6 sm:h-7 sm:w-7 text-primary-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-xs sm:text-sm font-medium text-gray-600">
+            <div>
+              <p className="text-sm font-medium text-dark-400">
                 Total Data Entries
               </p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">
+              <p className="text-2xl sm:text-3xl font-bold text-gradient">
                 {stats.totalData}
               </p>
             </div>
@@ -137,46 +132,42 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Users */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <Users className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        <div className="card overflow-hidden">
+          <div className="p-6 border-b border-dark-700/50">
+            <h3 className="text-lg font-semibold text-dark-200 flex items-center gap-2">
+              <Users className="h-5 w-5" />
               Recent Users
             </h3>
           </div>
-          <div className="p-4 sm:p-6">
+          <div className="p-6">
             {recentUsers.length > 0 ? (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 {recentUsers.map((user) => (
                   <div
                     key={user._id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2 sm:space-y-0"
+                    className="p-4 rounded-xl bg-dark-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-dark-200 truncate">
                         {user.name}
                       </p>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-dark-400 truncate">
                         {user.email}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          user.role === "admin"
-                            ? "bg-blue-100 text-blue-800"
-                            : "bg-gray-100 text-gray-800"
+                        className={`status-badge ${
+                          user.role === "admin" ? "admin" : "user"
                         }`}
                       >
                         {user.role}
                       </span>
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          user.isActive
-                            ? "bg-green-100 text-green-800"
-                            : "bg-red-100 text-red-800"
+                        className={`status-badge ${
+                          user.isActive ? "active" : "inactive"
                         }`}
                       >
                         {user.isActive ? "Active" : "Inactive"}
@@ -186,45 +177,43 @@ const AdminDashboard = () => {
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
-                No users found.
-              </p>
+              <p className="text-center text-dark-400">No users found.</p>
             )}
           </div>
         </div>
 
         {/* Recent Data Entries */}
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <div className="bg-gray-50 p-4 border-b">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <Database className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+        <div className="card overflow-hidden">
+          <div className="p-6 border-b border-dark-700/50">
+            <h3 className="text-lg font-semibold text-dark-200 flex items-center gap-2">
+              <Database className="h-5 w-5" />
               Recent Data Entries
             </h3>
           </div>
-          <div className="p-4 sm:p-6">
+          <div className="p-6">
             {recentData.length > 0 ? (
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4">
                 {recentData.map((data) => (
                   <div
                     key={data._id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-lg space-y-2 sm:space-y-0"
+                    className="p-4 rounded-xl bg-dark-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
+                      <p className="font-medium text-dark-200 truncate">
                         {data.title || data.username}
                       </p>
-                      <p className="text-sm text-gray-600 truncate">
+                      <p className="text-sm text-dark-400 truncate">
                         By: {data.user ? data.user.name : "Unknown"}
                       </p>
                     </div>
-                    <div className="text-xs sm:text-sm text-gray-500">
+                    <div className="text-sm text-dark-400">
                       {new Date(data.createdAt).toLocaleDateString()}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-gray-500 text-center py-4">
+              <p className="text-center text-dark-400">
                 No data entries found.
               </p>
             )}
